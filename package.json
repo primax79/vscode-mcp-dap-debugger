@@ -1,6 +1,6 @@
 {
   "name": "vscode-mcp-dap-debugger",
-  "displayName": "VSCode Debug MCP",
+  "displayName": "VSCode MCP DAP Debugger",
   "description": "VS Code extension and CLI that expose VS Code's Debug Adapter Protocol as MCP tools for AI coding agents",
   "version": "0.1.0",
   "publisher": "AlfredoOliviero",
