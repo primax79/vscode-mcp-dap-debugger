@@ -35,13 +35,6 @@
   "bin": {
     "vscode-debug-mcp": "./out/cli.js"
   },
-  "files": [
-    "out/**/*",
-    "resources/skills/**/*",
-    "README.md",
-    "CHANGELOG.md",
-    "LICENSE"
-  ],
   "contributes": {
     "commands": [
       {
