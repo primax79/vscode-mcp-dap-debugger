@@ -43,6 +43,20 @@ Run the extension: open this folder in VS Code and press F5 (Extension Developme
 Run the CLI standalone: `node out/cli.js <command> [args]` - see `resources/skills/dap-cli-debugging.md`
 for the full command/tool reference.
 
+## Packaging & Installation
+
+To create an installable `.vsix` package for VS Code:
+
+```bash
+npx @vscode/vsce package
+```
+
+This will generate a `vscode-debug-mcp-X.Y.Z.vsix` file in the repository root. You can install it in VS Code via the UI (Extensions -> `...` -> **Install from VSIX...**) or from the command line:
+
+```bash
+code --install-extension vscode-debug-mcp-*.vsix
+```
+
 ## Security model
 
 The HTTP server binds to `127.0.0.1` only, keeps DNS rebinding protection enabled, and requires
