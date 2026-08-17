@@ -9,3 +9,7 @@ eslint.config.mjs
 .gitignore
 node_modules/**
 *.vsix
+.claude/**
+.gemini/**
+.mcp-debug-tools/**
+DEVELOPMENT_TASK.md
