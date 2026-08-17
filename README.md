@@ -51,17 +51,17 @@ To create an installable `.vsix` package for VS Code:
 npx @vscode/vsce package
 ```
 
-This will generate a `vscode-debug-mcp-X.Y.Z.vsix` file in the repository root. You can install it in VS Code via the UI (Extensions -> `...` -> **Install from VSIX...**) or from the command line:
+This will generate a `vscode-mcp-dap-debugger-X.Y.Z.vsix` file in the repository root. You can install it in VS Code via the UI (Extensions -> `...` -> **Install from VSIX...**) or from the command line:
 
 ```bash
-code --install-extension vscode-debug-mcp-*.vsix
+code --install-extension vscode-mcp-dap-debugger-*.vsix
 ```
 
 ## Security model
 
 The HTTP server binds to `127.0.0.1` only, keeps DNS rebinding protection enabled, and requires
 a per-instance auth token (generated at startup, written to the workspace's
-`.vscode-debug-mcp/config.json` and to `~/.vscode-debug-mcp/active-configs.json`) on every
+`.vscode-mcp-dap-debugger/config.json` and to `~/.vscode-mcp-dap-debugger/active-configs.json`) on every
 request. The CLI discovers the token the same way it discovers the port. This is not meant as
 strong auth - it's a guard against another local process or user stumbling onto the port and
 driving the debugger (including running arbitrary expressions via `evaluate-expression`) without

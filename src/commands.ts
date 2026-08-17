@@ -23,7 +23,7 @@ function safeRegisterCommand(context: vscode.ExtensionContext, commandId: string
 }
 
 export function registerCommands(context: vscode.ExtensionContext): void {
-    safeRegisterCommand(context, 'vscode-debug-mcp.addUnboundBreakpoint', async () => {
+    safeRegisterCommand(context, 'vscode-mcp-dap-debugger.addUnboundBreakpoint', async () => {
         const activeEditor = vscode.window.activeTextEditor
         if (!activeEditor) {
             vscode.window.showErrorMessage('No active text editor. Open a file and try again.')
@@ -47,9 +47,9 @@ export function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showInformationMessage(`Breakpoint added to ${relativePath}:${lineNumber}`)
     })
 
-    safeRegisterCommand(context, 'vscode-debug-mcp.openMonitorPanel', () => createMonitoringPanel())
+    safeRegisterCommand(context, 'vscode-mcp-dap-debugger.openMonitorPanel', () => createMonitoringPanel())
 
-    safeRegisterCommand(context, 'vscode-debug-mcp.startServer', async () => {
+    safeRegisterCommand(context, 'vscode-mcp-dap-debugger.startServer', async () => {
         updateStatusBar?.('initializing')
         try {
             await startServer()
@@ -61,7 +61,7 @@ export function registerCommands(context: vscode.ExtensionContext): void {
         }
     })
 
-    safeRegisterCommand(context, 'vscode-debug-mcp.stopServer', async () => {
+    safeRegisterCommand(context, 'vscode-mcp-dap-debugger.stopServer', async () => {
         updateStatusBar?.('stopping')
         try {
             await stopServer()

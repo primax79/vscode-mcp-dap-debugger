@@ -14,7 +14,7 @@ export type DiscoveryResult =
 
 /**
  * CLI-side discovery: walk up from the current directory looking for
- * .vscode-debug-mcp/config.json, falling back to the global registry.
+ * .vscode-mcp-dap-debugger/config.json, falling back to the global registry.
  */
 export class ConfigFinder {
     static async findWorkspaceConfig(): Promise<WorkspaceConfig | null> {
@@ -22,7 +22,7 @@ export class ConfigFinder {
         const root = path.parse(currentDir).root
 
         while (currentDir !== root) {
-            const configPath = path.join(currentDir, '.vscode-debug-mcp', 'config.json')
+            const configPath = path.join(currentDir, '.vscode-mcp-dap-debugger', 'config.json')
             if (fs.existsSync(configPath)) {
                 try {
                     const config = JSON.parse(await readFile(configPath, 'utf8')) as WorkspaceConfig
@@ -37,7 +37,7 @@ export class ConfigFinder {
     }
 
     static async findFromGlobalRegistry(): Promise<RegistryEntry[]> {
-        const registryPath = path.join(os.homedir(), '.vscode-debug-mcp', 'active-configs.json')
+        const registryPath = path.join(os.homedir(), '.vscode-mcp-dap-debugger', 'active-configs.json')
         if (!fs.existsSync(registryPath)) return []
 
         try {

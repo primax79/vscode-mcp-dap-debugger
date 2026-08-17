@@ -22,7 +22,7 @@ export class WorkspaceConfigManager {
     private readonly configPath: string
 
     constructor(private readonly workspaceFolder: vscode.WorkspaceFolder, private readonly extensionPath: string) {
-        this.configDir = path.join(workspaceFolder.uri.fsPath, '.vscode-debug-mcp')
+        this.configDir = path.join(workspaceFolder.uri.fsPath, '.vscode-mcp-dap-debugger')
         this.configPath = path.join(this.configDir, 'config.json')
     }
 
@@ -67,7 +67,7 @@ export class WorkspaceConfigManager {
         try {
             await unlink(this.configPath)
         } catch (error: any) {
-            if (error.code !== 'ENOENT') console.error('[vscode-debug-mcp] Failed to remove config file:', error)
+            if (error.code !== 'ENOENT') console.error('[vscode-mcp-dap-debugger] Failed to remove config file:', error)
         }
     }
 
@@ -103,7 +103,7 @@ export class WorkspaceConfigManager {
                 await writeFile(destPath, content, 'utf8')
                 wroteAny = true
             } catch (error) {
-                console.error(`[vscode-debug-mcp] Failed to inject skill document to ${destPath}:`, error)
+                console.error(`[vscode-mcp-dap-debugger] Failed to inject skill document to ${destPath}:`, error)
             }
         }
 

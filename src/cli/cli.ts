@@ -5,7 +5,7 @@ import { ConfigFinder } from '../config/config-finder'
 import { listToolsAndResources, callTool, readResource, type ConnectionInfo } from './cli-action'
 
 function logInfo(message: string): void {
-    process.stderr.write(`[vscode-debug-mcp CLI] ${message}\n`)
+    process.stderr.write(`[vscode-mcp-dap-debugger CLI] ${message}\n`)
 }
 
 /**
@@ -101,7 +101,7 @@ async function startProxy(connection: ConnectionInfo): Promise<void> {
 const program = new Command()
 
 program
-    .name('vscode-debug-mcp')
+    .name('vscode-mcp-dap-debugger')
     .description('CLI and MCP proxy for VS Code debugging via DAP')
     .version('0.1.0')
     .option('--port <number>', 'Server port (disables auto-discovery)')

@@ -37,7 +37,7 @@ function createTracker(session: vscode.DebugSession): vscode.DebugAdapterTracker
             }
         },
         onError(error: Error) {
-            console.error(`[vscode-debug-mcp] DAP tracker error for session ${session.id}:`, error)
+            console.error(`[vscode-mcp-dap-debugger] DAP tracker error for session ${session.id}:`, error)
         },
         onExit() {
             // Session bookkeeping is handled by onDidTerminateDebugSession, not here.
@@ -58,7 +58,7 @@ async function captureExceptionInfo(session: vscode.DebugSession, threadId: numb
         })
     } catch (error) {
         // Not every debug adapter implements the exceptionInfo request; that's fine.
-        console.warn(`[vscode-debug-mcp] exceptionInfo request failed for session ${session.id}:`, error)
+        console.warn(`[vscode-mcp-dap-debugger] exceptionInfo request failed for session ${session.id}:`, error)
     }
 }
 

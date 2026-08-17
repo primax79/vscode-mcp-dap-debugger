@@ -1,8 +1,8 @@
-# Development task: hardening di `vscode-debug-mcp`
+# Development task: hardening di `vscode-mcp-dap-debugger`
 
 ## Contesto
 
-`vscode-debug-mcp` e una riscrittura dell'estensione originale che espone il debugger di VS Code
+`vscode-mcp-dap-debugger` e una riscrittura dell'estensione originale che espone il debugger di VS Code
 tramite MCP. La nuova implementazione ha gia corretto problemi importanti del progetto precedente:
 
 - un'istanza `McpServer` separata per ogni sessione client;
@@ -66,9 +66,9 @@ introdurne una prima della pubblicazione.
 - Le risorse MCP sono passate da nove a tre. La riduzione elimina duplicazioni e placeholder, ma e una
   breaking change per client che usano URI come `debug://console`, `debug://call-stack` o
   `debug://variables-scope`; le operazioni equivalenti restano disponibili come tool.
-- Sono cambiati package/bin (`@uhd_kr/mcp-debug-tools` / `mcp-debug-tools` -> `vscode-debug-mcp`),
-  command ID (`dap-proxy.*` -> `vscode-debug-mcp.*`), directory config (`.mcp-debug-tools` ->
-  `.vscode-debug-mcp`) e porta predefinita (8890 -> 8891). Serve una strategia di migrazione o una
+- Sono cambiati package/bin (`@uhd_kr/mcp-debug-tools` / `mcp-debug-tools` -> `vscode-mcp-dap-debugger`),
+  command ID (`dap-proxy.*` -> `vscode-mcp-dap-debugger.*`), directory config (`.mcp-debug-tools` ->
+  `.vscode-mcp-dap-debugger`) e porta predefinita (8890 -> 8891). Serve una strategia di migrazione o una
   dichiarazione esplicita di incompatibilita.
 - Il manifest della riscrittura usa ancora `publisher: "local-dev"`, repository vuoto e documentazione
   prevalentemente orientata allo sviluppo; il padre dispone invece di metadata e guida utente gia

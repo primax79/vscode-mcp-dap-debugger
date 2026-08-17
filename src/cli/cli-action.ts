@@ -8,11 +8,11 @@ export interface ConnectionInfo {
 }
 
 function logStderr(message: string): void {
-    process.stderr.write(`[vscode-debug-mcp CLI] ${message}\n`)
+    process.stderr.write(`[vscode-mcp-dap-debugger CLI] ${message}\n`)
 }
 
 async function createClient(connection: ConnectionInfo) {
-    const client = new Client({ name: 'vscode-debug-mcp-action-client', version: '0.1.0' }, { capabilities: {} })
+    const client = new Client({ name: 'vscode-mcp-dap-debugger-action-client', version: '0.1.0' }, { capabilities: {} })
     const transport = new StreamableHTTPClientTransport(new URL(connection.url), {
         requestInit: { headers: { 'x-mcp-debug-token': connection.token } },
     })

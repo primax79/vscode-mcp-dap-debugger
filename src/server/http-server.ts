@@ -37,12 +37,12 @@ async function closeSession(sessionId: string): Promise<void> {
     try {
         await session.server.close()
     } catch (error) {
-        console.error(`[vscode-debug-mcp] Error closing MCP server for session ${sessionId}:`, error)
+        console.error(`[vscode-mcp-dap-debugger] Error closing MCP server for session ${sessionId}:`, error)
     }
     try {
         await session.transport.close()
     } catch (error) {
-        console.error(`[vscode-debug-mcp] Error closing transport for session ${sessionId}:`, error)
+        console.error(`[vscode-mcp-dap-debugger] Error closing transport for session ${sessionId}:`, error)
     }
 }
 
@@ -52,7 +52,7 @@ function startSessionSweeper(): void {
         const now = Date.now()
         for (const [sessionId, session] of sessions) {
             if (now - session.lastSeenAt > SESSION_IDLE_TTL_MS) {
-                console.info(`[vscode-debug-mcp] Closing idle MCP session ${sessionId}`)
+                console.info(`[vscode-mcp-dap-debugger] Closing idle MCP session ${sessionId}`)
                 void closeSession(sessionId)
             }
         }
@@ -100,18 +100,18 @@ export function createHttpApp(getAuthToken: () => string | undefined): express.A
                     allowedHosts: buildAllowedHosts(),
                     onsessioninitialized: (id) => {
                         sessions.set(id, { server, transport, lastSeenAt: Date.now() })
-                        console.info(`[vscode-debug-mcp] Session initialized: ${id}`)
+                        console.info(`[vscode-mcp-dap-debugger] Session initialized: ${id}`)
                     },
                 })
 
                 transport.onclose = () => {
                     if (transport.sessionId) {
-                        console.info(`[vscode-debug-mcp] Session closed: ${transport.sessionId}`)
+                        console.info(`[vscode-mcp-dap-debugger] Session closed: ${transport.sessionId}`)
                         void closeSession(transport.sessionId)
                     }
                 }
                 transport.onerror = (error) => {
-                    console.error('[vscode-debug-mcp] Transport error:', error)
+                    console.error('[vscode-mcp-dap-debugger] Transport error:', error)
                     if (transport.sessionId) void closeSession(transport.sessionId)
                 }
 
@@ -126,7 +126,7 @@ export function createHttpApp(getAuthToken: () => string | undefined): express.A
                 id: null,
             })
         } catch (error: any) {
-            console.error('[vscode-debug-mcp] Error handling /mcp request:', error)
+            console.error('[vscode-mcp-dap-debugger] Error handling /mcp request:', error)
             if (sessionId) void closeSession(sessionId)
             if (!res.headersSent) {
                 res.status(500).json({ jsonrpc: '2.0', error: { code: -32603, message: 'Internal error' }, id: null })
@@ -147,7 +147,7 @@ export function createHttpApp(getAuthToken: () => string | undefined): express.A
         try {
             await session.transport.handleRequest(req, res)
         } catch (error) {
-            console.error(`[vscode-debug-mcp] Error handling session request (${sessionId}):`, error)
+            console.error(`[vscode-mcp-dap-debugger] Error handling session request (${sessionId}):`, error)
             await closeSession(sessionId!)
             if (!res.headersSent) res.status(500).send('Internal server error')
         }
@@ -182,9 +182,9 @@ export async function startHttpServer(app: express.Application, onServerStarted?
     state.httpServer = httpServer
     state.serverStartTime = new Date()
 
-    console.info(`[vscode-debug-mcp] MCP server listening on http://127.0.0.1:${availablePort}/mcp`)
+    console.info(`[vscode-mcp-dap-debugger] MCP server listening on http://127.0.0.1:${availablePort}/mcp`)
     if (availablePort !== MCP_SERVER_PORT) {
-        console.info(`[vscode-debug-mcp] Port ${MCP_SERVER_PORT} was busy, using ${availablePort} instead`)
+        console.info(`[vscode-mcp-dap-debugger] Port ${MCP_SERVER_PORT} was busy, using ${availablePort} instead`)
     }
 
     startSessionSweeper()
@@ -198,7 +198,7 @@ export async function stopHttpServer(): Promise<void> {
     return new Promise((resolve) => {
         if (state.httpServer) {
             state.httpServer.close(() => {
-                console.info('[vscode-debug-mcp] HTTP server closed')
+                console.info('[vscode-mcp-dap-debugger] HTTP server closed')
                 state.httpServer = undefined
                 state.currentPort = undefined
                 state.serverStartTime = undefined

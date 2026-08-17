@@ -7,7 +7,7 @@ const writeFile = promisify(fs.writeFile)
 const readFile = promisify(fs.readFile)
 const mkdir = promisify(fs.mkdir)
 
-const REGISTRY_DIR = path.join(os.homedir(), '.vscode-debug-mcp')
+const REGISTRY_DIR = path.join(os.homedir(), '.vscode-mcp-dap-debugger')
 const REGISTRY_PATH = path.join(REGISTRY_DIR, 'active-configs.json')
 const STALE_SWEEP_INTERVAL_MS = 30_000
 

@@ -9,7 +9,7 @@ import { allResources } from '../resources'
  * shared McpServer instance got connect()-ed to more than one transport.
  */
 export function createMcpServer(): McpServer {
-    const server = new McpServer({ name: 'vscode-debug-mcp', version: '0.1.0' })
+    const server = new McpServer({ name: 'vscode-mcp-dap-debugger', version: '0.1.0' })
 
     for (const tool of allTools) {
         server.registerTool(tool.name, tool.config, tool.handler)

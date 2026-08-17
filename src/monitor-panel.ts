@@ -19,10 +19,10 @@ export function createMonitoringPanel(): void {
                 updatePanel(panel)
                 break
             case 'startServer':
-                vscode.commands.executeCommand('vscode-debug-mcp.startServer')
+                vscode.commands.executeCommand('vscode-mcp-dap-debugger.startServer')
                 break
             case 'stopServer':
-                vscode.commands.executeCommand('vscode-debug-mcp.stopServer')
+                vscode.commands.executeCommand('vscode-mcp-dap-debugger.stopServer')
                 break
         }
     })
@@ -42,7 +42,7 @@ function getWorkspaceConfigStatus(): { exists: boolean; config?: WorkspaceConfig
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0]
     if (!workspaceFolder) return { exists: false }
 
-    const configPath = path.join(workspaceFolder.uri.fsPath, '.vscode-debug-mcp', 'config.json')
+    const configPath = path.join(workspaceFolder.uri.fsPath, '.vscode-mcp-dap-debugger', 'config.json')
     if (!fs.existsSync(configPath)) return { exists: false }
 
     try {

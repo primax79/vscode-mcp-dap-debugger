@@ -1,6 +1,6 @@
 ---
 name: dap-cli-debugging
-description: Control the VS Code Debugger (DAP) via CLI commands using vscode-debug-mcp. Use when debugging, setting breakpoints, stepping through code, or inspecting variables.
+description: Control the VS Code Debugger (DAP) via CLI commands using vscode-mcp-dap-debugger. Use when debugging, setting breakpoints, stepping through code, or inspecting variables.
 ---
 
 # AI Agent Skill: VS Code DAP Debugger Control via CLI
@@ -12,12 +12,12 @@ stdio connection needed.
 ## CLI Interface
 
 ```bash
-npx vscode-debug-mcp <command> [args]
+npx vscode-mcp-dap-debugger <command> [args]
 ```
 
 Auto-discovery finds the right VS Code instance (port + auth token) by walking up from the
-current directory for a `.vscode-debug-mcp/config.json`, then falling back to
-`~/.vscode-debug-mcp/active-configs.json` if there's exactly one active instance. If there are
+current directory for a `.vscode-mcp-dap-debugger/config.json`, then falling back to
+`~/.vscode-mcp-dap-debugger/active-configs.json` if there's exactly one active instance. If there are
 multiple active instances and discovery picks the wrong one, use `list-vscode-instances` and
 `select-vscode-instance`, or pass `--port`/`--token` explicitly.
 
@@ -30,9 +30,9 @@ multiple active instances and discovery picks the wrong one, use `list-vscode-in
 
 | Command | Usage |
 |---------|-------|
-| **list** | `npx vscode-debug-mcp list` - discover all available tools and their input schemas |
-| **call** | `npx vscode-debug-mcp call <toolName> [jsonArgs]` - execute a specific tool |
-| **read** | `npx vscode-debug-mcp read <resourceUri>` - read a debugger state resource |
+| **list** | `npx vscode-mcp-dap-debugger list` - discover all available tools and their input schemas |
+| **call** | `npx vscode-mcp-dap-debugger call <toolName> [jsonArgs]` - execute a specific tool |
+| **read** | `npx vscode-mcp-dap-debugger read <resourceUri>` - read a debugger state resource |
 
 ## Multiple debug sessions
 
@@ -94,22 +94,22 @@ one focused in the VS Code UI. Most tools accept an optional `sessionId`:
 
 ```bash
 # Check what's running
-npx vscode-debug-mcp call list-debug-sessions
+npx vscode-mcp-dap-debugger call list-debug-sessions
 
 # Set a conditional breakpoint / a logpoint
-npx vscode-debug-mcp call add-breakpoint '{"file": "src/app.ts", "line": 15, "condition": "x > 10"}'
-npx vscode-debug-mcp call add-breakpoint '{"file": "src/app.ts", "line": 15, "logMessage": "x = {x}"}'
+npx vscode-mcp-dap-debugger call add-breakpoint '{"file": "src/app.ts", "line": 15, "condition": "x > 10"}'
+npx vscode-mcp-dap-debugger call add-breakpoint '{"file": "src/app.ts", "line": 15, "logMessage": "x = {x}"}'
 
 # Start debugging with a named config
-npx vscode-debug-mcp call start-debug '{"config": "Launch Program"}'
+npx vscode-mcp-dap-debugger call start-debug '{"config": "Launch Program"}'
 
 # Step and inspect (targeting a specific session once more than one is active)
-npx vscode-debug-mcp call step-over '{"sessionId": "abc123"}'
-npx vscode-debug-mcp call get-variables-scope '{"sessionId": "abc123"}'
-npx vscode-debug-mcp call inspect-variable '{"variableName": "user.address[0].city"}'
+npx vscode-mcp-dap-debugger call step-over '{"sessionId": "abc123"}'
+npx vscode-mcp-dap-debugger call get-variables-scope '{"sessionId": "abc123"}'
+npx vscode-mcp-dap-debugger call inspect-variable '{"variableName": "user.address[0].city"}'
 
 # Evaluate an expression at the current breakpoint
-npx vscode-debug-mcp call evaluate-expression '{"expression": "arr.length"}'
+npx vscode-mcp-dap-debugger call evaluate-expression '{"expression": "arr.length"}'
 ```
 
 ## Standard Debugging Workflow

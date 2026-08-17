@@ -71,7 +71,7 @@ export async function startServer(): Promise<void> {
         } catch (error) {
             // Don't leave a listening socket with no valid config/token behind.
             await stopHttpServer().catch((cleanupError) => {
-                console.error('[vscode-debug-mcp] Failed to roll back a failed server start:', cleanupError)
+                console.error('[vscode-mcp-dap-debugger] Failed to roll back a failed server start:', cleanupError)
             })
             configManager = undefined
             throw error

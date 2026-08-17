@@ -10,7 +10,7 @@ let statusBarItem: vscode.StatusBarItem
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     try {
         statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100)
-        statusBarItem.command = 'vscode-debug-mcp.openMonitorPanel'
+        statusBarItem.command = 'vscode-mcp-dap-debugger.openMonitorPanel'
         statusBarItem.show()
         context.subscriptions.push(statusBarItem)
 
@@ -24,9 +24,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         registerCommands(context)
         context.subscriptions.push(registerDapTracker())
 
-        console.log('[vscode-debug-mcp] Extension activated')
+        console.log('[vscode-mcp-dap-debugger] Extension activated')
     } catch (error) {
-        console.error('[vscode-debug-mcp] Activation failed:', error)
+        console.error('[vscode-mcp-dap-debugger] Activation failed:', error)
         vscode.window.showErrorMessage(`VSCode Debug MCP failed to start: ${error}`)
         updateStatusBar('error')
     }

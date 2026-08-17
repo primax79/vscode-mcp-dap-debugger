@@ -4,7 +4,7 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import { inputSchemas } from '../tools/schemas'
 
 function logInfo(message: string): void {
-    process.stderr.write(`[vscode-debug-mcp CLI] ${message}\n`)
+    process.stderr.write(`[vscode-mcp-dap-debugger CLI] ${message}\n`)
 }
 
 /**
@@ -14,14 +14,14 @@ function logInfo(message: string): void {
 export async function createMcpClient(serverUrl: string, token: string): Promise<McpServer> {
     logInfo(`Connecting to ${serverUrl}`)
 
-    const client = new Client({ name: 'vscode-debug-mcp-client', version: '0.1.0' }, { capabilities: {} })
+    const client = new Client({ name: 'vscode-mcp-dap-debugger-client', version: '0.1.0' }, { capabilities: {} })
     const transport = new StreamableHTTPClientTransport(new URL(serverUrl), {
         requestInit: { headers: { 'x-mcp-debug-token': token } },
     })
     await client.connect(transport)
     logInfo('Connected')
 
-    const proxy = new McpServer({ name: 'vscode-debug-mcp-client', version: '0.1.0' })
+    const proxy = new McpServer({ name: 'vscode-mcp-dap-debugger-client', version: '0.1.0' })
 
     const { tools } = await client.listTools()
     for (const tool of tools) {

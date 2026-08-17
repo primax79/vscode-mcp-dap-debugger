@@ -7,7 +7,7 @@ node_modules
 .DS_Store
 .env*
 
-.vscode-debug-mcp/
+.vscode-mcp-dap-debugger/
 
 ### Claude Code ###
 .claude/worktrees/
