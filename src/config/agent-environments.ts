@@ -11,28 +11,45 @@ const mkdir = promisify(fs.mkdir)
 // Every SKILL.md we write carries a trailing hash marker of its own body, so a
 // later version can tell "still exactly what we wrote" (safe to replace with
 // the new version) apart from "the user edited this" (leave alone forever -
-// see canReplaceManagedContent). Files written before this marker existed
-// have no such tag; isLegacyUnmodified (passed in by the caller, which knows
-// how to undo its own content templating) is the fallback for those.
+// see canReplaceManagedContent). A file written before this marker existed has
+// no such tag and is treated as a customization, even if it's actually just an
+// older, untouched copy - the bundled content changes across versions for real
+// reasons (not just some reversible templating step), so there's no reliable
+// way to tell "old version we wrote" apart from "user's own file" without it.
 const MANAGED_MARKER_PREFIX = '<!-- vscode-mcp-dap-debugger:content-hash:'
 const MANAGED_MARKER_SUFFIX = ' -->'
+const MANAGED_MARKER_SEPARATOR = '\n\n'
 
 function hashContent(value: string): string {
     return crypto.createHash('sha256').update(value, 'utf8').digest('hex').slice(0, 16)
 }
 
 function withManagedMarker(content: string): string {
-    return `${content}\n\n${MANAGED_MARKER_PREFIX}${hashContent(content)}${MANAGED_MARKER_SUFFIX}\n`
+    return `${content}${MANAGED_MARKER_SEPARATOR}${MANAGED_MARKER_PREFIX}${hashContent(content)}${MANAGED_MARKER_SUFFIX}\n`
 }
 
-function canReplaceManagedContent(existing: string, isLegacyUnmodified?: (existing: string) => boolean): boolean {
+function canReplaceManagedContent(existing: string): boolean {
     const markerIndex = existing.lastIndexOf(MANAGED_MARKER_PREFIX)
-    if (markerIndex === -1) return isLegacyUnmodified?.(existing) ?? false
+    if (markerIndex === -1) return false
 
     const suffixIndex = existing.indexOf(MANAGED_MARKER_SUFFIX, markerIndex)
-    if (suffixIndex === -1) return isLegacyUnmodified?.(existing) ?? false
+    if (suffixIndex === -1) return false
 
-    const body = existing.slice(0, markerIndex).replace(/\n+$/, '')
+    // withManagedMarker always inserts exactly MANAGED_MARKER_SEPARATOR between
+    // the content and the marker - strip exactly that, not a greedy
+    // trailing-newline regex, which would also eat the content's own final
+    // newline (if it has one) and corrupt the hash on every round-trip.
+    const separatorStart = markerIndex - MANAGED_MARKER_SEPARATOR.length
+    if (existing.slice(separatorStart, markerIndex) !== MANAGED_MARKER_SEPARATOR) return false
+
+    // The marker must be the very last thing in the file (plus the single
+    // trailing newline withManagedMarker appends) - otherwise a hand-added
+    // note tacked on *after* the marker would go undetected, since the hash
+    // only ever covers what comes before it.
+    const markerEnd = suffixIndex + MANAGED_MARKER_SUFFIX.length
+    if (existing.slice(markerEnd) !== '\n') return false
+
+    const body = existing.slice(0, separatorStart)
     const storedHash = existing.slice(markerIndex + MANAGED_MARKER_PREFIX.length, suffixIndex)
     return hashContent(body) === storedHash
 }
@@ -94,12 +111,11 @@ export interface InjectionResult {
  * scopes. Two independent gates, both opt-outable:
  * - onlyIfAlreadyPresent: only write into a scope whose base folder
  *   (.claude/.gemini/.kilo) already exists there, instead of creating it.
- * - a SKILL.md that already exists at the target path is only replaced if it
- *   is still exactly what a previous version of this extension wrote there -
- *   verified via canReplaceManagedContent (a trailing hash marker for
- *   anything written by this code path, or isLegacyUnmodified for files
- *   written before that marker existed). Anything else is a customization
- *   the user made and is left alone unconditionally.
+ * - a SKILL.md that already exists at the target path is only replaced if
+ *   it's still exactly what a previous write from this code path produced -
+ *   verified via canReplaceManagedContent's trailing hash marker. Anything
+ *   else (hand-edited, or written before the marker existed) is treated as a
+ *   customization and left alone unconditionally.
  */
 export async function injectSkillEnvironment(
     env: SkillEnvironment,
@@ -107,8 +123,7 @@ export async function injectSkillEnvironment(
     skillName: string,
     workspaceRoot: string,
     content: string,
-    dryRun = false,
-    isLegacyUnmodified?: (existing: string) => boolean
+    dryRun = false
 ): Promise<InjectionResult[]> {
     if (!settings.enabled) return []
 
@@ -127,7 +142,7 @@ export async function injectSkillEnvironment(
 
         if (fs.existsSync(targetPath)) {
             const existing = await readFile(targetPath, 'utf8')
-            if (!canReplaceManagedContent(existing, isLegacyUnmodified)) {
+            if (!canReplaceManagedContent(existing)) {
                 results.push({ label, target: targetPath, written: false, reason: 'customized, not overwritten' })
                 continue
             }

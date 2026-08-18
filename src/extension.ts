@@ -9,6 +9,7 @@ let statusBarItem: vscode.StatusBarItem
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     try {
+        state.extensionPath = context.extensionPath
         statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100)
         statusBarItem.command = 'vscode-mcp-dap-debugger.openMonitorPanel'
         statusBarItem.show()

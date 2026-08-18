@@ -19,21 +19,6 @@ const unlink = promisify(fs.unlink)
 const SKILL_NAME = 'dap-cli-debugging'
 const SKILL_CONSENT_KEY = 'vscode-mcp-dap-debugger.skillInjectionConsent'
 
-// The bundled skill doc tells agents to run `npx vscode-mcp-dap-debugger` -
-// correct once the CLI is published to npm, and already correct for a
-// developer working from this source tree (npx resolves the local package.json
-// bin first). But it 404s for anyone who only installed the .vsix: there is no
-// npm package for npx to find. Injected copies get this swapped for the exact
-// path to the cli.js that ships inside *this* install, which always works.
-const NPX_INVOCATION = 'npx vscode-mcp-dap-debugger'
-
-// Matches the `node "<...>/out/cli.js"` invocation produced by templating
-// NPX_INVOCATION above, regardless of which install (path, version, OS) wrote
-// it - used to recognize a skill file written by an older version of this
-// extension as unmodified, so it can still be safely auto-updated even though
-// it predates the content-hash marker in agent-environments.ts.
-const CLI_INVOCATION_PATTERN = /node\s+"[^"\n]*[\\/]out[\\/]cli\.js"/g
-
 export interface WorkspaceConfig {
     vscodeInstanceId: string
     port: number
@@ -129,23 +114,20 @@ export class WorkspaceConfigManager {
         const skillSourcePath = path.join(this.extensionPath, 'resources', 'skills', `${SKILL_NAME}.md`)
         if (!fs.existsSync(skillSourcePath)) return
 
-        const rawContent = await readFile(skillSourcePath, 'utf8')
-        const cliPath = path.join(this.extensionPath, 'out', 'cli.js')
-        const content = rawContent.split(NPX_INVOCATION).join(`node ${JSON.stringify(cliPath)}`)
-
-        // A SKILL.md written by a version of this extension before the
-        // content-hash marker existed has no marker to check - but if
-        // reversing our CLI-path templating gets back exactly the bundled
-        // template, nobody hand-edited it, so it's still safe to upgrade in
-        // place (this is what lets an already-injected, pre-fix copy pick up
-        // e.g. the npx -> absolute cli.js path change below).
-        const isLegacyUnmodified = (existing: string) => existing.replace(CLI_INVOCATION_PATTERN, NPX_INVOCATION).trim() === rawContent.trim()
+        const content = await readFile(skillSourcePath, 'utf8')
 
         const workspaceRoot = this.workspaceFolder.uri.fsPath
         const config = vscode.workspace.getConfiguration('vscodeDebugMcp')
         const agentsMdSection = buildAgentsMdSection(content)
 
-        const candidates = await this.collectInjectionResults(config, workspaceRoot, content, agentsMdSection, true, isLegacyUnmodified)
+        // No legacy-unmodified fallback: a SKILL.md written before the
+        // content-hash marker existed (agent-environments.ts) has no reliable
+        // way to prove it wasn't hand-edited, since the bundled content itself
+        // changes across versions for real reasons, not just templating - so
+        // it's left alone like any other unmarked file. From this version
+        // onward, every file this writes carries the marker and auto-updates
+        // safely as long as nobody touches it.
+        const candidates = await this.collectInjectionResults(config, workspaceRoot, content, agentsMdSection, true)
         const pending = candidates.filter((r) => r.reason === 'pending consent')
         if (pending.length === 0) return
 
@@ -169,7 +151,7 @@ export class WorkspaceConfigManager {
             await this.context.workspaceState.update(SKILL_CONSENT_KEY, 'granted')
         }
 
-        const results = await this.collectInjectionResults(config, workspaceRoot, content, agentsMdSection, false, isLegacyUnmodified)
+        const results = await this.collectInjectionResults(config, workspaceRoot, content, agentsMdSection, false)
         const written = results.filter((r) => r.written)
         if (written.length > 0) {
             void vscode.window.showInformationMessage(
@@ -184,14 +166,13 @@ export class WorkspaceConfigManager {
         workspaceRoot: string,
         content: string,
         agentsMdSection: string,
-        dryRun: boolean,
-        isLegacyUnmodified: (existing: string) => boolean
+        dryRun: boolean
     ): Promise<InjectionResult[]> {
         const results: InjectionResult[] = []
 
         for (const env of SKILL_ENVIRONMENTS) {
             const settings = readInjectionSettings(config, env.id)
-            results.push(...(await injectSkillEnvironment(env, settings, SKILL_NAME, workspaceRoot, content, dryRun, isLegacyUnmodified)))
+            results.push(...(await injectSkillEnvironment(env, settings, SKILL_NAME, workspaceRoot, content, dryRun)))
         }
 
         const agentsMdSettings = readInjectionSettings(config, 'agentsMd')

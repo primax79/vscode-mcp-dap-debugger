@@ -12,18 +12,27 @@ stdio connection needed.
 
 ## CLI Interface
 
-You can execute commands via `npx` or directly via `node` from the installed VS Code extension folder (recommended for offline/fast execution):
+The CLI ships inside the installed VS Code extension - no separate package install needed.
+Define `$DAP_CLI` once, then use it for every command below:
 
 ```bash
-# Via npx (when published on npm)
-npx vscode-mcp-dap-debugger <command> [args]
+# macOS / Linux (relies on the shell expanding *, so run this in bash/zsh, not `sh -c` with globbing disabled)
+export DAP_CLI='node ~/.vscode/extensions/alfredooliviero.vscode-mcp-dap-debugger-*/out/cli.js'
+```
 
-# OR directly from the installed extension path (fastest, works offline):
-# macOS / Linux:
-node ~/.vscode/extensions/alfredooliviero.vscode-mcp-dap-debugger-*/out/cli.js <command> [args]
+```powershell
+# Windows (PowerShell) - PowerShell does not glob-expand * for external command
+# arguments, so resolve the path explicitly instead of embedding the wildcard:
+$cliPath = (Get-ChildItem "$env:USERPROFILE\.vscode\extensions\alfredooliviero.vscode-mcp-dap-debugger-*\out\cli.js").FullName
+$DAP_CLI = "node `"$cliPath`""
+```
 
-# Windows (PowerShell):
-node "$env:USERPROFILE\.vscode\extensions\alfredooliviero.vscode-mcp-dap-debugger-*\out\cli.js" <command> [args]
+(Optional) If the `vscode-mcp-dap-debugger` npm package is installed globally, or resolves via
+`npx` (e.g. run from this project's own source tree), set `DAP_CLI` to `npx vscode-mcp-dap-debugger`
+instead - everything below uses `$DAP_CLI` as-is either way.
+
+```bash
+$DAP_CLI <command> [args]
 ```
 
 Auto-discovery finds the right VS Code instance (port + auth token) by walking up from the
@@ -42,9 +51,9 @@ multiple active instances and discovery picks the wrong one, use `list-vscode-in
 
 | Command | Usage |
 | --------- | ------- |
-| **list** | `npx vscode-mcp-dap-debugger list` - discover all available tools and their input schemas |
-| **call** | `npx vscode-mcp-dap-debugger call <toolName> [jsonArgs]` - execute a specific tool |
-| **read** | `npx vscode-mcp-dap-debugger read <resourceUri>` - read a debugger state resource |
+| **list** | `$DAP_CLI list` - discover all available tools and their input schemas |
+| **call** | `$DAP_CLI call <toolName> [jsonArgs]` - execute a specific tool |
+| **read** | `$DAP_CLI read <resourceUri>` - read a debugger state resource |
 
 ## Multiple debug sessions
 
@@ -110,22 +119,22 @@ one focused in the VS Code UI. Most tools accept an optional `sessionId`:
 
 ```bash
 # Check what's running
-npx vscode-mcp-dap-debugger call list-debug-sessions
+$DAP_CLI call list-debug-sessions
 
 # Set a conditional breakpoint / a logpoint
-npx vscode-mcp-dap-debugger call add-breakpoint '{"file": "src/app.ts", "line": 15, "condition": "x > 10"}'
-npx vscode-mcp-dap-debugger call add-breakpoint '{"file": "src/app.ts", "line": 15, "logMessage": "x = {x}"}'
+$DAP_CLI call add-breakpoint '{"file": "src/app.ts", "line": 15, "condition": "x > 10"}'
+$DAP_CLI call add-breakpoint '{"file": "src/app.ts", "line": 15, "logMessage": "x = {x}"}'
 
 # Start debugging with a named config
-npx vscode-mcp-dap-debugger call start-debug '{"config": "Launch Program"}'
+$DAP_CLI call start-debug '{"config": "Launch Program"}'
 
 # Step and inspect (targeting a specific session once more than one is active)
-npx vscode-mcp-dap-debugger call step-over '{"sessionId": "abc123"}'
-npx vscode-mcp-dap-debugger call get-variables-scope '{"sessionId": "abc123"}'
-npx vscode-mcp-dap-debugger call inspect-variable '{"variableName": "user.address[0].city"}'
+$DAP_CLI call step-over '{"sessionId": "abc123"}'
+$DAP_CLI call get-variables-scope '{"sessionId": "abc123"}'
+$DAP_CLI call inspect-variable '{"variableName": "user.address[0].city"}'
 
 # Evaluate an expression at the current breakpoint
-npx vscode-mcp-dap-debugger call evaluate-expression '{"expression": "arr.length"}'
+$DAP_CLI call evaluate-expression '{"expression": "arr.length"}'
 ```
 
 ## 🛠️ Step 0: Debug Configuration Setup (`.vscode/launch.json`)
@@ -133,7 +142,7 @@ npx vscode-mcp-dap-debugger call evaluate-expression '{"expression": "arr.length
 Before starting a debug session, check available configurations:
 
 ```bash
-npx vscode-mcp-dap-debugger call list-debug-configs
+$DAP_CLI call list-debug-configs
 ```
 
 If `.vscode/launch.json` is missing or has no matching configuration for the project, **inspect the project root** (`package.json`, `tsconfig.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, etc.) and create or append the appropriate configuration into `.vscode/launch.json`:

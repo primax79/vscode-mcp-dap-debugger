@@ -11,7 +11,16 @@ class ExtensionState {
     private _currentPort: number | undefined
     private _serverStartTime: Date | undefined
     private _authToken: string | undefined
+    private _extensionPath: string | undefined
     private _activePanels: vscode.WebviewPanel[] = []
+
+    get extensionPath(): string | undefined {
+        return this._extensionPath
+    }
+
+    set extensionPath(path: string | undefined) {
+        this._extensionPath = path
+    }
 
     get httpServer(): Server | undefined {
         return this._httpServer
