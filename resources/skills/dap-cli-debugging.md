@@ -112,13 +112,83 @@ npx vscode-mcp-dap-debugger call inspect-variable '{"variableName": "user.addres
 npx vscode-mcp-dap-debugger call evaluate-expression '{"expression": "arr.length"}'
 ```
 
+## 🛠️ Step 0: Debug Configuration Setup (`.vscode/launch.json`)
+
+Before starting a debug session, check available configurations:
+```bash
+npx vscode-mcp-dap-debugger call list-debug-configs
+```
+
+If `.vscode/launch.json` is missing or has no matching configuration for the project, **inspect the project root** (`package.json`, `tsconfig.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, etc.) and create or append the appropriate configuration into `.vscode/launch.json`:
+
+### Standard Configuration Templates
+
+#### Node.js (JavaScript)
+```json
+{
+  "type": "node",
+  "request": "launch",
+  "name": "Launch Program",
+  "skipFiles": ["<node_internals>/**"],
+  "program": "${workspaceFolder}/<entry-point.js>"
+}
+```
+
+#### TypeScript (with ts-node / tsx / esbuild)
+```json
+{
+  "type": "node",
+  "request": "launch",
+  "name": "Launch TypeScript",
+  "runtimeArgs": ["-r", "ts-node/register"],
+  "args": ["${workspaceFolder}/src/index.ts"],
+  "sourceMaps": true,
+  "skipFiles": ["<node_internals>/**"]
+}
+```
+
+#### Python (debugpy)
+```json
+{
+  "name": "Python: Current File",
+  "type": "debugpy",
+  "request": "launch",
+  "program": "${file}",
+  "console": "integratedTerminal"
+}
+```
+
+#### Go (delve)
+```json
+{
+  "name": "Launch Package",
+  "type": "go",
+  "request": "launch",
+  "mode": "auto",
+  "program": "${workspaceFolder}"
+}
+```
+
+#### Rust / C++ (CodeLLDB)
+```json
+{
+  "name": "Debug Executable",
+  "type": "lldb",
+  "request": "launch",
+  "program": "${workspaceFolder}/target/debug/<binary-name>",
+  "cwd": "${workspaceFolder}"
+}
+```
+
+---
+
 ## Standard Debugging Workflow
 
+0. **Check/Create Launch Config** -> `list-debug-configs`, create `.vscode/launch.json` if missing
 1. **Check status** -> `list-debug-sessions` / `get-active-session`
-2. **List configs** -> `list-debug-configs`
-3. **Set breakpoints** -> `add-breakpoint` / `add-breakpoints`
-4. **Start debug** -> `start-debug` with the config name
-5. **Analyze state** -> `get-call-stack` + `get-variables-scope`
-6. **Inspect details** -> `inspect-variable` or `evaluate-expression`
-7. **Step through** -> `step-over` / `step-into` / `step-out`, repeat 5-6
-8. **Fix code** -> edit source, restart the debugger to verify
+2. **Set breakpoints** -> `add-breakpoint` / `add-breakpoints`
+3. **Start debug** -> `start-debug` with the chosen config name
+4. **Analyze state** -> `get-call-stack` + `get-variables-scope`
+5. **Inspect details** -> `inspect-variable` or `evaluate-expression`
+6. **Step through** -> `step-over` / `step-into` / `step-out`, repeat 4-5
+7. **Fix code** -> edit source, restart the debugger to verify

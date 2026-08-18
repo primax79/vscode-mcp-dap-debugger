@@ -45,6 +45,15 @@ It supports automatic injection for:
 
 *These are safely injected only if the base directories already exist, ensuring your workspace stays clean.*
 
+## 🎓 Tutorial & Sample Projects
+
+Ready to see it in action? We've prepared a comprehensive guide and 3 ready-to-run sample projects ranging from simple logic bugs to multi-threaded workflows:
+
+- **[Complete AI Debugging Tutorial](TUTORIAL.md)**: A step-by-step guide with ready-to-use prompts for your AI assistant.
+- **[Sample 1: Basic Calculation Bug](samples/01-basic-calculation-bug)**: Setting breakpoints and inspecting variables in synchronous code.
+- **[Sample 2: Async Data Pipeline](samples/02-async-data-pipeline)**: Catching unhandled exceptions and stepping through asynchronous streams.
+- **[Sample 3: Multi-Threaded Workers](samples/03-multi-threaded-worker)**: Inspecting worker threads and evaluating expressions across threads.
+
 ## ⚙️ Extension Settings
 
 You can customize the behavior of the extension via VS Code settings (`settings.json`):
