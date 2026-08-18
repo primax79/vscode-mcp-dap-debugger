@@ -2,11 +2,15 @@
 
 ## 0.2.0
 
-- Fixed an issue where extension commands resulted in a "command not found" error by adding explicit `onCommand` triggers to `activationEvents`.
-- Fixed VSIX bundle bloat by correctly ignoring the `mcp-debug-tools/` directory, drastically reducing the packaged extension size.
-- Refactored `RingBuffer` implementation to use a circular pointer for O(1) performance instead of array shifting.
-- Improved documentation and JSDoc comments for utility functions.
-- Updated README for the marketplace and extracted developer documentation into `DEVELOPMENT.md`.
+- **Workspace Configuration Relocation:** Workspace configuration and session auth tokens are now stored cleanly in `.vscode/mcp-dap-debugger.json` instead of creating a separate root folder, with backward-compatible auto-discovery fallback.
+- **Launcher Auto-Configuration in Skill:** The AI agent skill guide now includes instructions and preconfigured templates (Node.js, TypeScript, Python, Go, Rust) for automatically generating or updating `.vscode/launch.json` before starting a debug session.
+- **Tutorial & Sample Projects:** Added `TUTORIAL.md` and 3 standalone sample projects (`samples/`) demonstrating synchronous logic debugging, asynchronous exception trapping, and multi-threaded worker pool inspection.
+- **Fixed Extension Activation & Bundling:** 
+  - Fixed runtime module loading issue by configuring esbuild to resolve ESM modules for `jsonc-parser`.
+  - Added explicit `onCommand` triggers to `activationEvents` to prevent "command not found" errors when executing commands prior to full workspace startup.
+- **VSIX Package Optimization:** Correctly excluded development-only reference assets from the `.vsix` bundle, reducing extension package size from >100MB to ~690KB.
+- **Performance:** Refactored `RingBuffer` implementation with a circular pointer for O(1) insertions instead of array shifting.
+- **Documentation:** Restructured `README.md` for the VS Code Marketplace with a clean, technical tone, and separated local build instructions into `DEVELOPMENT.md`.
 
 ## 0.1.0
 
