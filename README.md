@@ -22,7 +22,10 @@ With this extension, your AI can:
 
 ## 🚀 Getting Started
 
-1. **Install the Extension:** Install this extension from the VS Code Marketplace.
+1. **Install the Extension:** 
+   - Open VS Code.
+   - Go to the **Extensions** view (`Cmd+Shift+X` on Mac / `Ctrl+Shift+X` on Windows).
+   - Search for **VSCode MCP DAP Debugger** and click **Install**.
 2. **Open a Project & Debug:** Open your project in VS Code and start a debug session (e.g., press `F5`).
 3. **Start the MCP Server:** 
    - Open the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`).
