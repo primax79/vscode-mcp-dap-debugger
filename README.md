@@ -1,91 +1,88 @@
-<div align="center">
-  <h1>🐞 VSCode MCP DAP Debugger</h1>
-  <p><strong>Give your AI Coding Assistants direct access and control over VS Code's native debugger.</strong></p>
-</div>
+# VSCode MCP DAP Debugger
+
+**VSCode MCP DAP Debugger** exposes VS Code's Debug Adapter Protocol (DAP) through the [Model Context Protocol (MCP)](https://modelcontextprotocol.io) and an integrated CLI. 
+
+This enables AI coding agents (such as **Claude Code, Kilo Code, Gemini CLI, Cursor, Roo Code, Codex**, and others) to interact programmatically with the active VS Code debugger: setting breakpoints, stepping through execution, inspecting runtime variables, and evaluating expressions against running processes.
 
 ---
 
-**VSCode MCP DAP Debugger** gives AI coding agents direct access and full programmatic control over VS Code's native debugging tools on the code they are developing and testing. By exposing VS Code's Debug Adapter Protocol (DAP) through the [Model Context Protocol (MCP)](https://modelcontextprotocol.io), it transforms your AI assistant from a static text reader into an active runtime troubleshooter.
+## Features
 
-Instead of guessing what went wrong from static code, AI agents (like **Claude Code, Copilot, Codex, Kilocode, Roo Code**, and more) can now set breakpoints, step through code, inspect variables, and evaluate expressions in a *real, live debug session* directly within VS Code.
+- **Launcher Auto-Configuration:** Analyzes the workspace (Node.js, TypeScript, Python, Go, Rust, etc.) and generates or updates `.vscode/launch.json` configurations prior to starting a debug session.
+- **Breakpoint Management:** Programmatically adds, removes, and lists breakpoints, conditional breakpoints, and logpoints.
+- **Execution Control:** Controls step-over, step-into, step-out, pause, continue, and stop operations.
+- **Variable Inspection:** Reads local, global, closure, and nested variable states across active stack frames.
+- **Expression Evaluation:** Evaluates expressions directly in the context of the paused frame.
+- **Multi-Session & Multi-Thread Support:** Tracks all active debug sessions and worker threads with explicit `sessionId` and `threadId` routing.
+- **Exception & Log Capture:** Retrieves raw DAP protocol messages, debug console output, and exception traces.
 
-## 🤖 Supercharge your AI Coding Assistants
+---
 
-When your code fails, AI agents usually have to add `console.log` statements or make educated guesses by reading the source. **No more.**
+## Getting Started
 
-With this extension, your AI can:
-
-- **Auto-Configure Launchers:** Never struggle with `.vscode/launch.json` again. Your AI agent can inspect your project (Node.js, TypeScript, Python, Go, Rust, etc.) and automatically generate or update the required debug launch configurations.
-- **Set Breakpoints:** Dynamically add, remove, and manage breakpoints (and logpoints) in your code.
-- **Step Through Execution:** Support for stepping over, stepping into, stepping out, and continuing execution to trace the exact flow of data.
-- **Inspect Variables:** Explore local and global variables, closures, and complex object states at any paused frame.
-- **Evaluate Expressions:** Run custom expressions in the context of the current paused debug session to test hypotheses immediately.
-- **Exception Inspection:** Read the exact stack traces and error messages when the debugger pauses on an exception.
-
-## 🚀 Getting Started
-
-1. **Install the Extension:**
+1. **Install the Extension:** 
    - Open VS Code.
-   - Go to the **Extensions** view (`Cmd+Shift+X` on Mac / `Ctrl+Shift+X` on Windows).
+   - Open the **Extensions** view (`Cmd+Shift+X` on macOS / `Ctrl+Shift+X` on Windows/Linux).
    - Search for **VSCode MCP DAP Debugger** and click **Install**.
-  
-2. **Open a Project & Debug:** Open your project in VS Code and start a debug session (e.g., press `F5`).
 
-3. **Start the MCP Server:**
+2. **Open a Project:** 
+   - Open your project folder in VS Code.
+
+3. **Start the MCP Server:** 
    - Open the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`).
-   - Type `Debug MCP: Start MCP Server` and execute it.
-   - *(Note: By default, the server starts automatically when you open a workspace).*
+   - Run `Debug MCP: Start MCP Server`.
+   - *(The server also starts automatically upon workspace activation if `vscodeDebugMcp.server.autoStart` is enabled).*
 
-4. **Let your AI take over:**
-   Ask your AI agent to debug a specific problem. It will automatically discover the MCP tools and begin debugging!
+4. **Agent Integration:**
+   - The extension automatically injects skill instructions into `.claude/skills`, `.gemini/skills`, `.kilo/skills`, or `AGENTS.md` (if the base directories exist in the workspace).
+   - The agent can then use the debugger tools directly via MCP or the standalone CLI (`vscode-mcp-dap-debugger`).
 
-### 🪄 Auto-Discovery for AI Agents
+---
 
-To ensure your AI agents know exactly how to use the debugger, the extension automatically injects usage instructions ("Skills") into your workspace.
-It supports automatic injection for:
+## Tutorial & Sample Projects
 
-- `.claude/skills` (for Claude Code)
-- `.gemini/skills` (for Gemini CLI)
-- `.kilo/skills` (for Kilocode)
-- `AGENTS.md` (for Codex CLI and other agents)
+Ready-to-run sample projects demonstrating debugging workflows from simple to advanced:
 
-*These are safely injected only if the base directories already exist, ensuring your workspace stays clean.*
-
-## 🎓 Tutorial & Sample Projects
-
-Ready to see it in action? We've prepared a comprehensive guide and 3 ready-to-run sample projects ranging from simple logic bugs to multi-threaded workflows:
-
-- **[Complete AI Debugging Tutorial](TUTORIAL.md)**: A step-by-step guide with ready-to-use prompts for your AI assistant.
+- **[AI Debugging Tutorial](TUTORIAL.md)**: Step-by-step walkthrough covering breakpoint inspection, asynchronous exceptions, and multi-threaded debugging.
 - **[Sample 1: Basic Calculation Bug](samples/01-basic-calculation-bug)**: Setting breakpoints and inspecting variables in synchronous code.
-- **[Sample 2: Async Data Pipeline](samples/02-async-data-pipeline)**: Catching unhandled exceptions and stepping through asynchronous streams.
+- **[Sample 2: Async Data Pipeline](samples/02-async-data-pipeline)**: Trapping unhandled exceptions and stepping through asynchronous streams.
 - **[Sample 3: Multi-Threaded Workers](samples/03-multi-threaded-worker)**: Inspecting worker threads and evaluating expressions across threads.
 
-## ⚙️ Extension Settings
+---
 
-You can customize the behavior of the extension via VS Code settings (`settings.json`):
+## Extension Settings
+
+All configuration options are available under the `vscodeDebugMcp.*` namespace in `settings.json`:
 
 | Setting | Default | Description |
-| --- | --- | --- |
+|---|---|---|
 | `vscodeDebugMcp.server.autoStart` | `true` | Automatically start the MCP server when opening a workspace. |
-| `vscodeDebugMcp.server.port` | `8891` | Preferred port for the local MCP server. If busy, the next free port is used. |
-| `vscodeDebugMcp.agentSkills.*` | `true` | Independently toggle and scope (project vs global) the auto-injection of skills for Claude, Gemini, Kilo, and `AGENTS.md`. |
-| `vscodeDebugMcp.server.*Capacity` | `500` / `50` | Buffer limits for DAP logs, console output, and exceptions to prevent memory bloat during long sessions. |
+| `vscodeDebugMcp.server.port` | `8891` | Preferred port for the local MCP server. If busy, the next available port is bound. |
+| `vscodeDebugMcp.agentSkills.*` | `true` | Configure auto-injection of skills per environment (Claude, Gemini, Kilo, AGENTS.md). |
+| `vscodeDebugMcp.server.dapLogCapacity` | `500` | Maximum number of DAP protocol messages retained per session. |
+| `vscodeDebugMcp.server.consoleOutputCapacity` | `500` | Maximum number of console output lines retained per session. |
+| `vscodeDebugMcp.server.exceptionCapacity` | `50` | Maximum number of exception records retained per session. |
+| `vscodeDebugMcp.server.terminatedSessionRetentionMinutes` | `5` | Retention window (in minutes) for terminated session data before eviction. |
 
-## 🔒 Security & Architecture
+---
 
-Security is a primary focus when exposing internal IDE APIs.
+## Security & Architecture
 
-- **Local Only:** The HTTP server binds strictly to `127.0.0.1`.
-- **DNS Rebinding Protection:** Prevents malicious websites from hijacking the local server.
-- **Per-instance Auth Tokens:** A unique token is generated at startup and required for every request. The CLI auto-discovers this token via a local config file (`.vscode-mcp-dap-debugger/config.json`). This ensures only processes with local filesystem access to your workspace can drive the debugger.
+- **Local Loopback Only:** The HTTP server binds exclusively to `127.0.0.1`.
+- **DNS Rebinding Protection:** Enforced on all incoming requests.
+- **Per-Instance Token Authentication:** A cryptographic token is generated at startup and written to `.vscode-mcp-dap-debugger/config.json` with restricted file permissions (`0o600`).
+- **Discovery Isolation:** The CLI discovers active instances by reading the local workspace configuration or querying the per-user active registry (`~/.vscode-mcp-dap-debugger/active-configs.json`).
 
-## 👨‍💻 Development & Contributing
+---
 
-Want to contribute, build from source, or check out the technical implementation details?
-Please refer to the [DEVELOPMENT.md](DEVELOPMENT.md) guide.
+## Development & Contributing
 
-## 🏆 Credits & License
+For instructions on building from source, testing the CLI standalone, or running the extension in development mode, refer to [DEVELOPMENT.md](DEVELOPMENT.md).
 
-This project is a from-scratch rewrite, inspired by [mcp-debug-tools](https://github.com/hwanyong/mcp-debug-tools) by Hwanyong Yoo. The VS Code integration points and CLI discovery approach were used as a reference, while the DAP tracking, session handling, atomic server startup, and security models were redesigned from the ground up to be robust, secure, and multi-session capable.
+---
+
+## Credits & License
+
+This project is a from-scratch rewrite inspired by [mcp-debug-tools](https://github.com/hwanyong/mcp-debug-tools) by Hwanyong Yoo. The VS Code integration points and CLI discovery approach were used as a reference, while the DAP tracking, session lifecycle, atomic server startup, and security models were redesigned.
 
 Licensed under the **GPL-3.0** License.
