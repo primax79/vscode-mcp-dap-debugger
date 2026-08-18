@@ -6,6 +6,7 @@ description: Control the VS Code Debugger (DAP) via CLI commands using vscode-mc
 # AI Agent Skill: VS Code DAP Debugger Control via CLI
 
 ## Objective
+
 You (the AI agent) can control the VS Code debugger via one-off CLI commands - no persistent
 stdio connection needed.
 
@@ -22,6 +23,7 @@ multiple active instances and discovery picks the wrong one, use `list-vscode-in
 `select-vscode-instance`, or pass `--port`/`--token` explicitly.
 
 **Key rules:**
+
 - `stdout` = pure JSON result. Always parse stdout only.
 - `stderr` = connection logs. Ignore stderr.
 - On error, read the JSON error message, correct arguments, and retry.
@@ -29,7 +31,7 @@ multiple active instances and discovery picks the wrong one, use `list-vscode-in
 ### Commands
 
 | Command | Usage |
-|---------|-------|
+| --------- | ------- |
 | **list** | `npx vscode-mcp-dap-debugger list` - discover all available tools and their input schemas |
 | **call** | `npx vscode-mcp-dap-debugger call <toolName> [jsonArgs]` - execute a specific tool |
 | **read** | `npx vscode-mcp-dap-debugger read <resourceUri>` - read a debugger state resource |
@@ -46,8 +48,9 @@ one focused in the VS Code UI. Most tools accept an optional `sessionId`:
 ## Available Tools - Quick Reference
 
 ### Session & Config Management
+
 | Tool | Params | Description |
-|------|--------|-------------|
+| ------ | -------- | ------------- |
 | `list-debug-sessions` | - | List every tracked debug session |
 | `get-active-session` | - | Get the session focused in the VS Code UI |
 | `get-debug-state` | `sessionId?` | Session overview + all breakpoints |
@@ -60,8 +63,9 @@ one focused in the VS Code UI. Most tools accept an optional `sessionId`:
 | `select-vscode-instance` | `port?`, `workspace?` | Find connection details for another instance |
 
 ### Breakpoint Management
+
 | Tool | Params | Description |
-|------|--------|-------------|
+| ------ | -------- | ------------- |
 | `add-breakpoint` | `file`, `line`, `condition?`, `hitCondition?`, `logMessage?` | Add a breakpoint or logpoint |
 | `add-breakpoints` | `breakpoints[]` | Add multiple at once |
 | `remove-breakpoint` | `file`, `line` | Remove a breakpoint |
@@ -69,8 +73,9 @@ one focused in the VS Code UI. Most tools accept an optional `sessionId`:
 | `list-breakpoints` | - | List all breakpoints, with conditions/logMessage |
 
 ### Execution Control (session/thread-scoped)
+
 | Tool | Params | Description |
-|------|--------|-------------|
+| ------ | -------- | ------------- |
 | `continue` | `sessionId?`, `threadId?` | Resume execution |
 | `step-over` | `sessionId?`, `threadId?` | Step over current line |
 | `step-into` | `sessionId?`, `threadId?` | Step into function call |
@@ -78,8 +83,9 @@ one focused in the VS Code UI. Most tools accept an optional `sessionId`:
 | `pause` | `sessionId?`, `threadId?` | Pause running execution |
 
 ### State Inspection
+
 | Tool | Params | Description |
-|------|--------|-------------|
+| ------ | -------- | ------------- |
 | `get-call-stack` | `sessionId?`, `threadId?`, `startFrame?`, `levels?` | Call stack frames |
 | `get-active-stack-item` | - | Currently focused thread/stack frame |
 | `get-variables-scope` | `sessionId?`, `frameId?`, `scopeName?` | All variables in scope |
@@ -115,6 +121,7 @@ npx vscode-mcp-dap-debugger call evaluate-expression '{"expression": "arr.length
 ## 🛠️ Step 0: Debug Configuration Setup (`.vscode/launch.json`)
 
 Before starting a debug session, check available configurations:
+
 ```bash
 npx vscode-mcp-dap-debugger call list-debug-configs
 ```
@@ -124,6 +131,7 @@ If `.vscode/launch.json` is missing or has no matching configuration for the pro
 ### Standard Configuration Templates
 
 #### Node.js (JavaScript)
+
 ```json
 {
   "type": "node",
@@ -135,6 +143,7 @@ If `.vscode/launch.json` is missing or has no matching configuration for the pro
 ```
 
 #### TypeScript (with ts-node / tsx / esbuild)
+
 ```json
 {
   "type": "node",
@@ -148,6 +157,7 @@ If `.vscode/launch.json` is missing or has no matching configuration for the pro
 ```
 
 #### Python (debugpy)
+
 ```json
 {
   "name": "Python: Current File",
@@ -159,6 +169,7 @@ If `.vscode/launch.json` is missing or has no matching configuration for the pro
 ```
 
 #### Go (delve)
+
 ```json
 {
   "name": "Launch Package",
@@ -170,6 +181,7 @@ If `.vscode/launch.json` is missing or has no matching configuration for the pro
 ```
 
 #### Rust / C++ (CodeLLDB)
+
 ```json
 {
   "name": "Debug Executable",
