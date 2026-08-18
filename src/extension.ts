@@ -14,15 +14,19 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         statusBarItem.show()
         context.subscriptions.push(statusBarItem)
 
-        updateStatusBar('initializing')
         initLifecycle(context)
-
-        await startServer()
-        updateStatusBar('running')
-
         setStatusBarUpdater(updateStatusBar)
         registerCommands(context)
         context.subscriptions.push(registerDapTracker())
+
+        const autoStart = vscode.workspace.getConfiguration('vscodeDebugMcp').get<boolean>('server.autoStart', true)
+        if (autoStart) {
+            updateStatusBar('initializing')
+            await startServer()
+            updateStatusBar('running')
+        } else {
+            updateStatusBar('stopped')
+        }
 
         console.log('[vscode-mcp-dap-debugger] Extension activated')
     } catch (error) {

@@ -12,4 +12,5 @@ node_modules/**
 .claude/**
 .gemini/**
 .mcp-debug-tools/**
+mcp-debug-tools/**
 DEVELOPMENT_TASK.md

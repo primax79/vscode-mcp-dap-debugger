@@ -1,3 +1,4 @@
+import * as vscode from 'vscode'
 import express from 'express'
 import { randomUUID } from 'node:crypto'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
@@ -8,11 +9,16 @@ import { findAvailablePort } from '../utils/port'
 import { createMcpServer } from './mcp-server-factory'
 import { createAuthMiddleware } from './auth'
 
-// Different default port than the original mcp-debug-tools (8890) so both
-// can coexist on the same machine during migration.
-const MCP_SERVER_PORT = 8891
+// Fallback default, distinct from the original mcp-debug-tools (8890) so both
+// can coexist on the same machine during migration. Overridable via the
+// vscodeDebugMcp.server.port setting.
+const DEFAULT_MCP_SERVER_PORT = 8891
 const SESSION_IDLE_TTL_MS = 30 * 60 * 1000
 const SESSION_SWEEP_INTERVAL_MS = 5 * 60 * 1000
+
+function preferredPort(): number {
+    return vscode.workspace.getConfiguration('vscodeDebugMcp').get<number>('server.port', DEFAULT_MCP_SERVER_PORT)
+}
 
 interface Session {
     server: McpServer
@@ -170,7 +176,8 @@ export function createHttpApp(getAuthToken: () => string | undefined): express.A
  * error from onServerStarted was silently swallowed.
  */
 export async function startHttpServer(app: express.Application, onServerStarted?: () => void | Promise<void>): Promise<void> {
-    const availablePort = await findAvailablePort(MCP_SERVER_PORT)
+    const wantedPort = preferredPort()
+    const availablePort = await findAvailablePort(wantedPort)
     const httpServer = app.listen(availablePort, '127.0.0.1')
 
     await new Promise<void>((resolve, reject) => {
@@ -183,8 +190,8 @@ export async function startHttpServer(app: express.Application, onServerStarted?
     state.serverStartTime = new Date()
 
     console.info(`[vscode-mcp-dap-debugger] MCP server listening on http://127.0.0.1:${availablePort}/mcp`)
-    if (availablePort !== MCP_SERVER_PORT) {
-        console.info(`[vscode-mcp-dap-debugger] Port ${MCP_SERVER_PORT} was busy, using ${availablePort} instead`)
+    if (availablePort !== wantedPort) {
+        console.info(`[vscode-mcp-dap-debugger] Port ${wantedPort} was busy, using ${availablePort} instead`)
     }
 
     startSessionSweeper()

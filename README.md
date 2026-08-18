@@ -1,44 +1,72 @@
-# VSCode MCP DAP Debugger
+<div align="center">
+  <h1>🐞 VSCode MCP DAP Debugger</h1>
+  <p><strong>Give your AI Coding Assistants the power to run a real, live debugger.</strong></p>
+</div>
 
-A VS Code extension and CLI that expose VS Code's Debug Adapter Protocol (DAP) as Model Context Protocol (MCP) tools. This allows AI coding agents (like Claude, Kilo, Roo Code, etc.) to set breakpoints, step through code, inspect variables, and read exceptions in a real, live debug session directly within VS Code.
+---
 
-## 🚀 Features
+**VSCode MCP DAP Debugger** is a VS Code extension and CLI tool that exposes VS Code's Debug Adapter Protocol (DAP) as [Model Context Protocol (MCP)](https://modelcontextprotocol.io) tools. 
 
-Empower your AI agents with real debugging capabilities:
-- **Set Breakpoints:** Agents can dynamically add, remove, and manage breakpoints (and logpoints) in your code.
-- **Step Through Execution:** Support for stepping over, stepping into, stepping out, and continuing execution.
-- **Inspect Variables:** Agents can explore local/global variables, closures, and complex object states.
-- **Evaluate Expressions:** Run expressions in the context of the current debug session.
+Instead of guessing what went wrong from static code, AI agents (like **Claude Code, Copilot, Codex, Kilocode, Roo Code**, and more) can now set breakpoints, step through code, inspect variables, and evaluate expressions in a *real, live debug session* directly within VS Code.
+
+## 🤖 Supercharge your AI Coding Assistants
+
+When your code fails, AI agents usually have to add `console.log` statements or make educated guesses by reading the source. **No more.**
+
+With this extension, your AI can:
+- **Set Breakpoints:** Dynamically add, remove, and manage breakpoints (and logpoints) in your code.
+- **Step Through Execution:** Support for stepping over, stepping into, stepping out, and continuing execution to trace the exact flow of data.
+- **Inspect Variables:** Explore local and global variables, closures, and complex object states at any paused frame.
+- **Evaluate Expressions:** Run custom expressions in the context of the current paused debug session to test hypotheses immediately.
 - **Exception Inspection:** Read the exact stack traces and error messages when the debugger pauses on an exception.
 
-## 💡 How to Use
+## 🚀 Getting Started
 
-1. **Start the MCP Server:** Open the Command Palette in VS Code (`Cmd+Shift+P` / `Ctrl+Shift+P`), type `VSCode Debug MCP: Start MCP Server`, and execute it.
-2. **AI Agent Discovery:** Once the server is running, your AI agent can interact with it via the CLI tool `vscode-mcp-dap-debugger`. 
-   - *Note:* The extension automatically injects usage instructions (Skills) into `.claude/skills` and `.gemini/skills` in your workspace so that agents know exactly how to use the debugger tools.
-3. **Debug:** Ask your AI agent to debug a specific problem, and watch it set breakpoints and step through your code!
+1. **Install the Extension:** Install this extension from the VS Code Marketplace.
+2. **Open a Project & Debug:** Open your project in VS Code and start a debug session (e.g., press `F5`).
+3. **Start the MCP Server:** 
+   - Open the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`).
+   - Type `Debug MCP: Start MCP Server` and execute it. 
+   - *(Note: By default, the server starts automatically when you open a workspace).*
+4. **Let your AI take over:** 
+   Ask your AI agent to debug a specific problem. It will automatically discover the MCP tools and begin debugging!
 
-For manual installation and development instructions, please refer to the [DEVELOPMENT.md](./DEVELOPMENT.md) guide.
+### 🪄 Auto-Discovery for AI Agents
 
-## 🛠️ Implementation Details (Security Model)
+To ensure your AI agents know exactly how to use the debugger, the extension automatically injects usage instructions ("Skills") into your workspace. 
+It supports automatic injection for:
+- `.claude/skills` (for Claude Code)
+- `.gemini/skills` (for Gemini CLI)
+- `.kilo/skills` (for Kilocode)
+- `AGENTS.md` (for Codex CLI and other agents)
 
-The HTTP server binds to `127.0.0.1` only, keeps DNS rebinding protection enabled, and requires a per-instance auth token on every request. 
-- The token is generated at startup and written to the workspace's `.vscode-mcp-dap-debugger/config.json` and to `~/.vscode-mcp-dap-debugger/active-configs.json`. 
-- The CLI discovers the token the same way it discovers the port. 
-- This is not meant as strong auth, but rather as a guard against another local process or user stumbling onto the port and driving the debugger (including running arbitrary expressions via `evaluate-expression`) without having had filesystem access to this workspace in the first place.
+*These are safely injected only if the base directories already exist, ensuring your workspace stays clean.*
 
-## 🏆 Credits
+## ⚙️ Extension Settings
 
-This project is a from-scratch rewrite, started as an analysis of and inspired by [mcp-debug-tools](https://github.com/hwanyong/mcp-debug-tools) by Hwanyong Yoo. No source code was copied verbatim (aside from a few small, functionally trivial utility files); the VS Code integration points (activation, commands, contributes) and CLI/discovery approach were used as a reference while redesigning the DAP tracking, session handling, and server security from the ground up. Licensed GPL-3.0, same as the original.
+You can customize the behavior of the extension via VS Code settings (`settings.json`):
 
-## 🔄 Why a rewrite
+| Setting | Default | Description |
+|---|---|---|
+| `vscodeDebugMcp.server.autoStart` | `true` | Automatically start the MCP server when opening a workspace. |
+| `vscodeDebugMcp.server.port` | `8891` | Preferred port for the local MCP server. If busy, the next free port is used. |
+| `vscodeDebugMcp.agentSkills.*` | `true` | Independently toggle and scope (project vs global) the auto-injection of skills for Claude, Gemini, Kilo, and `AGENTS.md`. |
+| `vscodeDebugMcp.server.*Capacity` | `500` / `50` | Buffer limits for DAP logs, console output, and exceptions to prevent memory bloat during long sessions. |
 
-An analysis of the original tool found several issues not worth patching in place:
-- DAP message tracking was a stub that always returned canned placeholders for `get-dap-log`, `get-debug-console` and `get-exception-info` - never real data.
-- A single shared `McpServer` instance handled every client session, causing a second concurrent connection to hang indefinitely.
-- The HTTP server had no authentication and disabled DNS rebinding protection.
-- `logMessage` (logpoints) was accepted but never actually applied.
-- Stopping/restarting the server via command left the on-disk config file pointing at a stale port.
-- Two `package.json` files were swapped in and out before each build, which is how a required runtime dependency ended up undeclared in every published version.
+## 🔒 Security & Architecture
 
-All of these are fixed here; see `CHANGELOG.md` for the full list.
+Security is a primary focus when exposing internal IDE APIs.
+- **Local Only:** The HTTP server binds strictly to `127.0.0.1`.
+- **DNS Rebinding Protection:** Prevents malicious websites from hijacking the local server.
+- **Per-instance Auth Tokens:** A unique token is generated at startup and required for every request. The CLI auto-discovers this token via a local config file (`.vscode-mcp-dap-debugger/config.json`). This ensures only processes with local filesystem access to your workspace can drive the debugger.
+
+## 👨‍💻 Development & Contributing
+
+Want to contribute, build from source, or check out the technical implementation details? 
+Please refer to the [DEVELOPMENT.md](DEVELOPMENT.md) guide.
+
+## 🏆 Credits & License
+
+This project is a from-scratch rewrite, inspired by [mcp-debug-tools](https://github.com/hwanyong/mcp-debug-tools) by Hwanyong Yoo. The VS Code integration points and CLI discovery approach were used as a reference, while the DAP tracking, session handling, atomic server startup, and security models were redesigned from the ground up to be robust, secure, and multi-session capable. 
+
+Licensed under the **GPL-3.0** License.

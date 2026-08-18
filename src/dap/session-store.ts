@@ -34,16 +34,34 @@ export interface TrackedSession {
     status: 'live' | 'terminated'
 }
 
-const DAP_LOG_CAPACITY = 500
-const CONSOLE_OUTPUT_CAPACITY = 500
-const EXCEPTION_CAPACITY = 50
+function config() {
+    return vscode.workspace.getConfiguration('vscodeDebugMcp')
+}
 
-// How long a terminated session's logs/console/exceptions stay queryable
-// after the session ends. Fast scripts (in particular ones only hit by
-// logpoints, which don't pause execution) can finish before an agent gets a
-// chance to call get-debug-console/get-dap-log - without this grace period
-// their output would already be gone by the time it's requested.
-const TERMINATED_SESSION_RETENTION_MS = 5 * 60 * 1000
+function dapLogCapacity(): number {
+    return config().get<number>('server.dapLogCapacity', 500)
+}
+
+function consoleOutputCapacity(): number {
+    return config().get<number>('server.consoleOutputCapacity', 500)
+}
+
+function exceptionCapacity(): number {
+    return config().get<number>('server.exceptionCapacity', 50)
+}
+
+/**
+ * How long a terminated session's logs/console/exceptions stay queryable
+ * after the session ends. Fast scripts (in particular ones only hit by
+ * logpoints, which don't pause execution) can finish before an agent gets a
+ * chance to call get-debug-console/get-dap-log - without this grace period
+ * their output would already be gone by the time it's requested. Read live
+ * (not cached) so a settings change applies without an extension reload.
+ */
+function terminatedSessionRetentionMs(): number {
+    const minutes = config().get<number>('server.terminatedSessionRetentionMinutes', 5)
+    return Math.max(0, minutes) * 60 * 1000
+}
 
 /**
  * Tracks every debug session VS Code reports (not just the one focused in the
@@ -62,9 +80,9 @@ class SessionStore {
             this.sessions.set(session.id, {
                 session,
                 startedAt: Date.now(),
-                dapLog: new RingBuffer(DAP_LOG_CAPACITY),
-                consoleOutput: new RingBuffer(CONSOLE_OUTPUT_CAPACITY),
-                exceptions: new RingBuffer(EXCEPTION_CAPACITY),
+                dapLog: new RingBuffer(dapLogCapacity()),
+                consoleOutput: new RingBuffer(consoleOutputCapacity()),
+                exceptions: new RingBuffer(exceptionCapacity()),
             })
         }
         this.activeSessionId = session.id
@@ -72,7 +90,7 @@ class SessionStore {
 
     /**
      * Marks a session as terminated but keeps its logs around for
-     * TERMINATED_SESSION_RETENTION_MS instead of deleting them immediately.
+     * terminatedSessionRetentionMs() instead of deleting them immediately.
      */
     unregisterSession(sessionId: string): void {
         const record = this.sessions.get(sessionId)
@@ -139,8 +157,9 @@ class SessionStore {
 
     private evictStaleTerminatedSessions(): void {
         const now = Date.now()
+        const retentionMs = terminatedSessionRetentionMs()
         for (const [sessionId, record] of this.sessions) {
-            if (record.terminatedAt && now - record.terminatedAt > TERMINATED_SESSION_RETENTION_MS) {
+            if (record.terminatedAt && now - record.terminatedAt > retentionMs) {
                 this.sessions.delete(sessionId)
             }
         }

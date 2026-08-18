@@ -9,6 +9,7 @@ const common = {
     target: 'node18',
     sourcemap: true,
     logLevel: 'info',
+    mainFields: ['module', 'main'],
 }
 
 const targets = [

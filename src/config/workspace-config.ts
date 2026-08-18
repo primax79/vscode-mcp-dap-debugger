@@ -2,11 +2,21 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as vscode from 'vscode'
 import { promisify } from 'util'
+import {
+    SKILL_ENVIRONMENTS,
+    injectSkillEnvironment,
+    injectAgentsMdSection,
+    buildAgentsMdSection,
+    type InjectionSettings,
+    type InjectionResult,
+} from './agent-environments'
 
 const writeFile = promisify(fs.writeFile)
 const readFile = promisify(fs.readFile)
 const mkdir = promisify(fs.mkdir)
 const unlink = promisify(fs.unlink)
+
+const SKILL_NAME = 'dap-cli-debugging'
 
 export interface WorkspaceConfig {
     vscodeInstanceId: string
@@ -45,7 +55,7 @@ export class WorkspaceConfigManager {
         }
 
         await this.save(config)
-        await this.maybeInjectSkillDocument()
+        await this.maybeInjectSkillDocuments()
         return config
     }
 
@@ -77,41 +87,52 @@ export class WorkspaceConfigManager {
     }
 
     /**
-     * Writes the AI-agent SKILL.md guide into .claude/skills and
-     * .gemini/skills, unless disabled via the vscodeDebugMcp.injectAgentSkills
-     * setting. Unlike the original tool, this always tells the user it
-     * happened instead of writing into their workspace silently.
+     * Writes/updates the AI-agent skill guide for each configured environment
+     * (Claude Code, Gemini CLI, Kilo Code, plus a marked section in AGENTS.md
+     * for Codex CLI and similar tools). Each environment is independently
+     * configurable via "vscodeDebugMcp.agentSkills.<id>.*" - enabled, scope
+     * (project/global/both), and onlyIfAlreadyPresent (only write into a
+     * location whose base folder/file already exists, instead of creating it
+     * from scratch). A SKILL.md that already exists at the target path is
+     * never overwritten, regardless of these settings - see agent-environments.ts.
      */
-    private async maybeInjectSkillDocument(): Promise<void> {
-        const enabled = vscode.workspace.getConfiguration('vscodeDebugMcp').get<boolean>('injectAgentSkills', true)
-        if (!enabled) return
-
-        const skillSourcePath = path.join(this.extensionPath, 'resources', 'skills', 'dap-cli-debugging.md')
+    private async maybeInjectSkillDocuments(): Promise<void> {
+        const skillSourcePath = path.join(this.extensionPath, 'resources', 'skills', `${SKILL_NAME}.md`)
         if (!fs.existsSync(skillSourcePath)) return
 
         const content = await readFile(skillSourcePath, 'utf8')
-        const workspacePath = this.workspaceFolder.uri.fsPath
-        const targets = [
-            path.join(workspacePath, '.gemini', 'skills', 'dap-cli-debugging', 'SKILL.md'),
-            path.join(workspacePath, '.claude', 'skills', 'dap-cli-debugging', 'SKILL.md'),
-        ]
+        const workspaceRoot = this.workspaceFolder.uri.fsPath
+        const config = vscode.workspace.getConfiguration('vscodeDebugMcp')
+        const results: InjectionResult[] = []
 
-        let wroteAny = false
-        for (const destPath of targets) {
-            try {
-                await mkdir(path.dirname(destPath), { recursive: true })
-                await writeFile(destPath, content, 'utf8')
-                wroteAny = true
-            } catch (error) {
-                console.error(`[vscode-mcp-dap-debugger] Failed to inject skill document to ${destPath}:`, error)
-            }
+        for (const env of SKILL_ENVIRONMENTS) {
+            const settings = readInjectionSettings(config, env.id)
+            results.push(...(await injectSkillEnvironment(env, settings, SKILL_NAME, workspaceRoot, content)))
         }
 
-        if (wroteAny) {
+        const agentsMdSettings = readInjectionSettings(config, 'agentsMd')
+        results.push(...(await injectAgentsMdSection(agentsMdSettings, workspaceRoot, buildAgentsMdSection(content))))
+
+        const written = results.filter((r) => r.written)
+        if (written.length > 0) {
             void vscode.window.showInformationMessage(
-                'VSCode Debug MCP wrote AI-agent skill guides to .claude/skills and .gemini/skills in this workspace. ' +
-                'Disable via the "vscodeDebugMcp.injectAgentSkills" setting.'
+                `VSCode MCP DAP Debugger wrote/updated AI-agent guides for: ${written.map((r) => r.label).join(', ')}. ` +
+                'Configure per environment via the "vscodeDebugMcp.agentSkills.*" settings.'
             )
         }
+    }
+}
+
+/**
+ * onlyIfAlreadyPresent defaults to true across every environment - this
+ * matches the tool's existing behavior (it never created .claude/.gemini/.kilo
+ * from scratch) and is the least surprising default: opting into "force
+ * create" is a deliberate per-environment choice, not the out-of-the-box one.
+ */
+function readInjectionSettings(config: vscode.WorkspaceConfiguration, id: string): InjectionSettings {
+    return {
+        enabled: config.get<boolean>(`agentSkills.${id}.enabled`, true),
+        scope: config.get<'project' | 'global' | 'both'>(`agentSkills.${id}.scope`, 'project'),
+        onlyIfAlreadyPresent: config.get<boolean>(`agentSkills.${id}.onlyIfAlreadyPresent`, true),
     }
 }
