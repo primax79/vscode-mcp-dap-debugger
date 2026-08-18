@@ -38,6 +38,8 @@ This enables AI coding agents (such as **Claude Code, Kilo Code, Gemini CLI, Cur
    - Ask your AI assistant to debug a specific issue (e.g. *"Set a breakpoint in `app.js` and trace the calculation error"*).
    - The agent will discover the tools and control the active VS Code debugger.
 
+> **Note on approval prompts:** Claude Code (and similar CLIs) treat project-scoped MCP servers declared in `.mcp.json` as untrusted until explicitly approved — this is a security gate, not a bug. The prompt only appears when the CLI starts a new session in the project directory: if a session was already running before the server was configured, it won't show up retroactively. Start (or restart) your AI assistant session in the project folder to trigger the prompt, then approve `dap-proxy` (or your configured server name) when asked. Check the current state anytime with `claude mcp list`.
+
 ---
 
 ## Tutorial & Sample Projects

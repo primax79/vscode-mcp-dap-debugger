@@ -36,6 +36,8 @@ With **VSCode MCP DAP Debugger**, the assistant drives VS Code's Debug Adapter P
 4. **Agent Skill Injection:** The extension automatically places skill definitions in `.claude/skills`, `.gemini/skills`, `.kilo/skills`, or `AGENTS.md` if the respective directories exist.
 5. **Launch & Approve:** Open a terminal in the project directory, run your AI assistant (e.g. `claude` or `kilo`), and approve the MCP server permissions when prompted.
 
+> **Note on approval prompts:** Claude Code (and similar CLIs) treat project-scoped MCP servers declared in `.mcp.json` as untrusted until explicitly approved — this is a security gate, not a bug. The prompt only appears when the CLI starts a new session in the project directory: if a session was already running before the server was configured, it won't show up retroactively. Start (or restart) your AI assistant session in the project folder to trigger the prompt, then approve `dap-proxy` (or your configured server name) when asked. Check the current state anytime with `claude mcp list`.
+
 ---
 
 ## Level 1 (Basic): Breakpoints & Variable Inspection
