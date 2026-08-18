@@ -15,6 +15,7 @@ import { updateAllPanels } from './monitor-panel'
 
 let configManager: WorkspaceConfigManager | undefined
 let extensionPath: string | undefined
+let extensionContext: vscode.ExtensionContext | undefined
 
 // Shared by concurrent startServer() callers, so a second call while one is
 // already in flight awaits the same attempt instead of racing a second
@@ -23,6 +24,7 @@ let startingPromise: Promise<void> | undefined
 
 export function initLifecycle(context: vscode.ExtensionContext): void {
     extensionPath = context.extensionPath
+    extensionContext = context
 }
 
 export async function startServer(): Promise<void> {
@@ -37,8 +39,8 @@ export async function startServer(): Promise<void> {
                 state.authToken = generateAuthToken()
 
                 const workspaceFolder = vscode.workspace.workspaceFolders?.[0]
-                if (workspaceFolder && extensionPath) {
-                    configManager = new WorkspaceConfigManager(workspaceFolder, extensionPath)
+                if (workspaceFolder && extensionPath && extensionContext) {
+                    configManager = new WorkspaceConfigManager(workspaceFolder, extensionPath, extensionContext)
                     // If this throws (e.g. can't write the config file), the whole
                     // start fails and is rolled back below - without a config file
                     // the CLI has no way to discover the token, so a "running but

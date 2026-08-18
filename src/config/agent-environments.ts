@@ -1,3 +1,4 @@
+import * as crypto from 'crypto'
 import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
@@ -6,6 +7,35 @@ import { promisify } from 'util'
 const writeFile = promisify(fs.writeFile)
 const readFile = promisify(fs.readFile)
 const mkdir = promisify(fs.mkdir)
+
+// Every SKILL.md we write carries a trailing hash marker of its own body, so a
+// later version can tell "still exactly what we wrote" (safe to replace with
+// the new version) apart from "the user edited this" (leave alone forever -
+// see canReplaceManagedContent). Files written before this marker existed
+// have no such tag; isLegacyUnmodified (passed in by the caller, which knows
+// how to undo its own content templating) is the fallback for those.
+const MANAGED_MARKER_PREFIX = '<!-- vscode-mcp-dap-debugger:content-hash:'
+const MANAGED_MARKER_SUFFIX = ' -->'
+
+function hashContent(value: string): string {
+    return crypto.createHash('sha256').update(value, 'utf8').digest('hex').slice(0, 16)
+}
+
+function withManagedMarker(content: string): string {
+    return `${content}\n\n${MANAGED_MARKER_PREFIX}${hashContent(content)}${MANAGED_MARKER_SUFFIX}\n`
+}
+
+function canReplaceManagedContent(existing: string, isLegacyUnmodified?: (existing: string) => boolean): boolean {
+    const markerIndex = existing.lastIndexOf(MANAGED_MARKER_PREFIX)
+    if (markerIndex === -1) return isLegacyUnmodified?.(existing) ?? false
+
+    const suffixIndex = existing.indexOf(MANAGED_MARKER_SUFFIX, markerIndex)
+    if (suffixIndex === -1) return isLegacyUnmodified?.(existing) ?? false
+
+    const body = existing.slice(0, markerIndex).replace(/\n+$/, '')
+    const storedHash = existing.slice(markerIndex + MANAGED_MARKER_PREFIX.length, suffixIndex)
+    return hashContent(body) === storedHash
+}
 
 export type SkillEnvironmentId = 'claude' | 'gemini' | 'kilo'
 export type InjectionScope = 'project' | 'global' | 'both'
@@ -64,16 +94,21 @@ export interface InjectionResult {
  * scopes. Two independent gates, both opt-outable:
  * - onlyIfAlreadyPresent: only write into a scope whose base folder
  *   (.claude/.gemini/.kilo) already exists there, instead of creating it.
- * - never overwrite a SKILL.md that already exists at the target path - a
- *   customized skill the user wrote themselves is left alone unconditionally,
- *   regardless of onlyIfAlreadyPresent.
+ * - a SKILL.md that already exists at the target path is only replaced if it
+ *   is still exactly what a previous version of this extension wrote there -
+ *   verified via canReplaceManagedContent (a trailing hash marker for
+ *   anything written by this code path, or isLegacyUnmodified for files
+ *   written before that marker existed). Anything else is a customization
+ *   the user made and is left alone unconditionally.
  */
 export async function injectSkillEnvironment(
     env: SkillEnvironment,
     settings: InjectionSettings,
     skillName: string,
     workspaceRoot: string,
-    content: string
+    content: string,
+    dryRun = false,
+    isLegacyUnmodified?: (existing: string) => boolean
 ): Promise<InjectionResult[]> {
     if (!settings.enabled) return []
 
@@ -91,13 +126,21 @@ export async function injectSkillEnvironment(
         }
 
         if (fs.existsSync(targetPath)) {
-            results.push({ label, target: targetPath, written: false, reason: 'already exists, not overwritten' })
+            const existing = await readFile(targetPath, 'utf8')
+            if (!canReplaceManagedContent(existing, isLegacyUnmodified)) {
+                results.push({ label, target: targetPath, written: false, reason: 'customized, not overwritten' })
+                continue
+            }
+        }
+
+        if (dryRun) {
+            results.push({ label, target: targetPath, written: false, reason: 'pending consent' })
             continue
         }
 
         try {
             await mkdir(path.dirname(targetPath), { recursive: true })
-            await writeFile(targetPath, content, 'utf8')
+            await writeFile(targetPath, withManagedMarker(content), 'utf8')
             results.push({ label, target: targetPath, written: true })
         } catch (error) {
             results.push({ label, target: targetPath, written: false, reason: String(error) })
@@ -114,7 +157,12 @@ export async function injectSkillEnvironment(
  * markers, leaving everything else in the file untouched. Idempotent: running
  * it again just replaces the same marked section, it never duplicates it.
  */
-export async function injectAgentsMdSection(settings: InjectionSettings, workspaceRoot: string, sectionContent: string): Promise<InjectionResult[]> {
+export async function injectAgentsMdSection(
+    settings: InjectionSettings,
+    workspaceRoot: string,
+    sectionContent: string,
+    dryRun = false
+): Promise<InjectionResult[]> {
     if (!settings.enabled) return []
 
     const targetPath = path.join(workspaceRoot, AGENTS_MD_RELATIVE_PATH)
@@ -136,6 +184,10 @@ export async function injectAgentsMdSection(settings: InjectionSettings, workspa
 
     if (updated === existing) {
         return [{ label: 'AGENTS.md', target: targetPath, written: false, reason: 'already up to date' }]
+    }
+
+    if (dryRun) {
+        return [{ label: 'AGENTS.md', target: targetPath, written: false, reason: 'pending consent' }]
     }
 
     try {

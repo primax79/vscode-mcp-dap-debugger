@@ -34,6 +34,7 @@ With **VSCode MCP DAP Debugger**, the assistant drives VS Code's Debug Adapter P
 2. **Open a Project:** Ensure a workspace folder is open.
 3. **Server Status:** Confirm the status bar indicates `● Debug MCP:8891`.
 4. **Agent Skill Injection:** The extension automatically places skill definitions in `.claude/skills`, `.gemini/skills`, `.kilo/skills`, or `AGENTS.md` if the respective directories exist.
+5. **Launch & Approve:** Open a terminal in the project directory, run your AI assistant (e.g. `claude` or `kilo`), and approve the MCP server permissions when prompted.
 
 ---
 

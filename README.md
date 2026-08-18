@@ -27,15 +27,16 @@ This enables AI coding agents (such as **Claude Code, Kilo Code, Gemini CLI, Cur
 
 2. **Open a Project:** 
    - Open your project folder in VS Code.
+   - Verify the status bar shows `● Debug MCP:8891` (the MCP server starts automatically by default upon workspace load).
 
-3. **Start the MCP Server:** 
-   - Open the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`).
-   - Run `Debug MCP: Start MCP Server`.
-   - *(The server also starts automatically upon workspace activation if `vscodeDebugMcp.server.autoStart` is enabled).*
+3. **Launch your AI Assistant & Approve MCP:**
+   - Open a terminal inside your project directory.
+   - Launch your AI coding assistant (e.g. `claude` or `kilo`).
+   - When prompted by the assistant CLI to approve the new MCP server/tools, grant permission.
 
-4. **Agent Integration:**
-   - The extension automatically injects skill instructions into `.claude/skills`, `.gemini/skills`, `.kilo/skills`, or `AGENTS.md` (if the base directories exist in the workspace).
-   - The agent can then use the debugger tools directly via MCP or the standalone CLI (`vscode-mcp-dap-debugger`).
+4. **Debug with AI:**
+   - Ask your AI assistant to debug a specific issue (e.g. *"Set a breakpoint in `app.js` and trace the calculation error"*).
+   - The agent will discover the tools and control the active VS Code debugger.
 
 ---
 

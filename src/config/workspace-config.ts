@@ -17,6 +17,15 @@ const mkdir = promisify(fs.mkdir)
 const unlink = promisify(fs.unlink)
 
 const SKILL_NAME = 'dap-cli-debugging'
+const SKILL_CONSENT_KEY = 'vscode-mcp-dap-debugger.skillInjectionConsent'
+
+// The bundled skill doc tells agents to run `npx vscode-mcp-dap-debugger` -
+// correct once the CLI is published to npm, and already correct for a
+// developer working from this source tree (npx resolves the local package.json
+// bin first). But it 404s for anyone who only installed the .vsix: there is no
+// npm package for npx to find. Injected copies get this swapped for the exact
+// path to the cli.js that ships inside *this* install, which always works.
+const NPX_INVOCATION = 'npx vscode-mcp-dap-debugger'
 
 export interface WorkspaceConfig {
     vscodeInstanceId: string
@@ -31,7 +40,11 @@ export class WorkspaceConfigManager {
     private readonly configDir: string
     private readonly configPath: string
 
-    constructor(private readonly workspaceFolder: vscode.WorkspaceFolder, private readonly extensionPath: string) {
+    constructor(
+        private readonly workspaceFolder: vscode.WorkspaceFolder,
+        private readonly extensionPath: string,
+        private readonly context: vscode.ExtensionContext
+    ) {
         this.configDir = path.join(workspaceFolder.uri.fsPath, '.vscode')
         this.configPath = path.join(this.configDir, 'mcp-dap-debugger.json')
     }
@@ -95,24 +108,50 @@ export class WorkspaceConfigManager {
      * location whose base folder/file already exists, instead of creating it
      * from scratch). A SKILL.md that already exists at the target path is
      * never overwritten, regardless of these settings - see agent-environments.ts.
+     *
+     * Before writing anything for the first time in a given workspace, this
+     * asks the user via a native popup - a heuristic (folder already exists)
+     * is a proxy for consent, not consent itself. The answer is remembered in
+     * workspaceState so the user is asked once per workspace, not on every
+     * VS Code restart.
      */
     private async maybeInjectSkillDocuments(): Promise<void> {
         const skillSourcePath = path.join(this.extensionPath, 'resources', 'skills', `${SKILL_NAME}.md`)
         if (!fs.existsSync(skillSourcePath)) return
 
-        const content = await readFile(skillSourcePath, 'utf8')
+        const rawContent = await readFile(skillSourcePath, 'utf8')
+        const cliPath = path.join(this.extensionPath, 'out', 'cli.js')
+        const content = rawContent.split(NPX_INVOCATION).join(`node ${JSON.stringify(cliPath)}`)
+
         const workspaceRoot = this.workspaceFolder.uri.fsPath
         const config = vscode.workspace.getConfiguration('vscodeDebugMcp')
-        const results: InjectionResult[] = []
+        const agentsMdSection = buildAgentsMdSection(content)
 
-        for (const env of SKILL_ENVIRONMENTS) {
-            const settings = readInjectionSettings(config, env.id)
-            results.push(...(await injectSkillEnvironment(env, settings, SKILL_NAME, workspaceRoot, content)))
+        const candidates = await this.collectInjectionResults(config, workspaceRoot, content, agentsMdSection, true)
+        const pending = candidates.filter((r) => r.reason === 'pending consent')
+        if (pending.length === 0) return
+
+        const consent = this.context.workspaceState.get<'granted' | 'declined'>(SKILL_CONSENT_KEY)
+        if (consent === 'declined') return
+
+        if (consent !== 'granted') {
+            const choice = await vscode.window.showInformationMessage(
+                `VSCode MCP DAP Debugger can add AI-agent debugging instructions to: ${pending.map((r) => r.label).join(', ')}. ` +
+                'This lets your AI coding assistant discover and use the debugger CLI. Install these guides?',
+                'Install',
+                "Don't ask again",
+                'Not now'
+            )
+
+            if (choice === "Don't ask again") {
+                await this.context.workspaceState.update(SKILL_CONSENT_KEY, 'declined')
+                return
+            }
+            if (choice !== 'Install') return // "Not now" or dismissed - ask again next activation
+            await this.context.workspaceState.update(SKILL_CONSENT_KEY, 'granted')
         }
 
-        const agentsMdSettings = readInjectionSettings(config, 'agentsMd')
-        results.push(...(await injectAgentsMdSection(agentsMdSettings, workspaceRoot, buildAgentsMdSection(content))))
-
+        const results = await this.collectInjectionResults(config, workspaceRoot, content, agentsMdSection, false)
         const written = results.filter((r) => r.written)
         if (written.length > 0) {
             void vscode.window.showInformationMessage(
@@ -120,6 +159,26 @@ export class WorkspaceConfigManager {
                 'Configure per environment via the "vscodeDebugMcp.agentSkills.*" settings.'
             )
         }
+    }
+
+    private async collectInjectionResults(
+        config: vscode.WorkspaceConfiguration,
+        workspaceRoot: string,
+        content: string,
+        agentsMdSection: string,
+        dryRun: boolean
+    ): Promise<InjectionResult[]> {
+        const results: InjectionResult[] = []
+
+        for (const env of SKILL_ENVIRONMENTS) {
+            const settings = readInjectionSettings(config, env.id)
+            results.push(...(await injectSkillEnvironment(env, settings, SKILL_NAME, workspaceRoot, content, dryRun)))
+        }
+
+        const agentsMdSettings = readInjectionSettings(config, 'agentsMd')
+        results.push(...(await injectAgentsMdSection(agentsMdSettings, workspaceRoot, agentsMdSection, dryRun)))
+
+        return results
     }
 }
 
