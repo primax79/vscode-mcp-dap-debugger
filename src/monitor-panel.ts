@@ -42,15 +42,23 @@ function getWorkspaceConfigStatus(): { exists: boolean; config?: WorkspaceConfig
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0]
     if (!workspaceFolder) return { exists: false }
 
-    const configPath = path.join(workspaceFolder.uri.fsPath, '.vscode-mcp-dap-debugger', 'config.json')
-    if (!fs.existsSync(configPath)) return { exists: false }
+    const candidatePaths = [
+        path.join(workspaceFolder.uri.fsPath, '.vscode', 'mcp-dap-debugger.json'),
+        path.join(workspaceFolder.uri.fsPath, '.vscode-mcp-dap-debugger', 'config.json'),
+    ]
 
-    try {
-        const config = JSON.parse(fs.readFileSync(configPath, 'utf8')) as WorkspaceConfig
-        return { exists: true, config }
-    } catch {
-        return { exists: false }
+    for (const configPath of candidatePaths) {
+        if (fs.existsSync(configPath)) {
+            try {
+                const config = JSON.parse(fs.readFileSync(configPath, 'utf8')) as WorkspaceConfig
+                return { exists: true, config }
+            } catch {
+                return { exists: false }
+            }
+        }
     }
+
+    return { exists: false }
 }
 
 function maskToken(token: string): string {

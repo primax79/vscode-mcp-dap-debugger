@@ -70,8 +70,8 @@ All configuration options are available under the `vscodeDebugMcp.*` namespace i
 
 - **Local Loopback Only:** The HTTP server binds exclusively to `127.0.0.1`.
 - **DNS Rebinding Protection:** Enforced on all incoming requests.
-- **Per-Instance Token Authentication:** A cryptographic token is generated at startup and written to `.vscode-mcp-dap-debugger/config.json` with restricted file permissions (`0o600`).
-- **Discovery Isolation:** The CLI discovers active instances by reading the local workspace configuration or querying the per-user active registry (`~/.vscode-mcp-dap-debugger/active-configs.json`).
+- **Per-Instance Token Authentication:** A cryptographic token is generated at startup and written to `.vscode/mcp-dap-debugger.json` with restricted file permissions (`0o600`).
+- **Discovery Isolation:** The CLI discovers active instances by reading the workspace configuration (`.vscode/mcp-dap-debugger.json`) or querying the per-user active registry (`~/.vscode-mcp-dap-debugger/active-configs.json`).
 
 ---
 

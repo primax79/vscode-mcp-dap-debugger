@@ -32,8 +32,8 @@ export class WorkspaceConfigManager {
     private readonly configPath: string
 
     constructor(private readonly workspaceFolder: vscode.WorkspaceFolder, private readonly extensionPath: string) {
-        this.configDir = path.join(workspaceFolder.uri.fsPath, '.vscode-mcp-dap-debugger')
-        this.configPath = path.join(this.configDir, 'config.json')
+        this.configDir = path.join(workspaceFolder.uri.fsPath, '.vscode')
+        this.configPath = path.join(this.configDir, 'mcp-dap-debugger.json')
     }
 
     /**

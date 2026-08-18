@@ -17,7 +17,7 @@ npx vscode-mcp-dap-debugger <command> [args]
 ```
 
 Auto-discovery finds the right VS Code instance (port + auth token) by walking up from the
-current directory for a `.vscode-mcp-dap-debugger/config.json`, then falling back to
+current directory for a `.vscode/mcp-dap-debugger.json`, then falling back to
 `~/.vscode-mcp-dap-debugger/active-configs.json` if there's exactly one active instance. If there are
 multiple active instances and discovery picks the wrong one, use `list-vscode-instances` and
 `select-vscode-instance`, or pass `--port`/`--token` explicitly.

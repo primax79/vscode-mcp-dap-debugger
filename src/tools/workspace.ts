@@ -18,14 +18,20 @@ export const getWorkspaceInfoTool = {
         const folder = vscode.workspace.workspaceFolders?.[0]
         if (!folder) return ok({ message: 'No workspace folder open' })
 
-        const configPath = path.join(folder.uri.fsPath, '.vscode-mcp-dap-debugger', 'config.json')
+        const candidatePaths = [
+            path.join(folder.uri.fsPath, '.vscode', 'mcp-dap-debugger.json'),
+            path.join(folder.uri.fsPath, '.vscode-mcp-dap-debugger', 'config.json'),
+        ]
         let configSummary: { port: number; pid: number } | 'No config file' = 'No config file'
-        if (fs.existsSync(configPath)) {
-            try {
-                const config = JSON.parse(fs.readFileSync(configPath, 'utf8')) as WorkspaceConfig
-                configSummary = { port: config.port, pid: config.pid }
-            } catch {
-                // leave as 'No config file' if it can't be parsed
+        for (const configPath of candidatePaths) {
+            if (fs.existsSync(configPath)) {
+                try {
+                    const config = JSON.parse(fs.readFileSync(configPath, 'utf8')) as WorkspaceConfig
+                    configSummary = { port: config.port, pid: config.pid }
+                    break
+                } catch {
+                    // try next candidate
+                }
             }
         }
 

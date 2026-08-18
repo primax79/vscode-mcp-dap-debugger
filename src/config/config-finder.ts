@@ -22,13 +22,19 @@ export class ConfigFinder {
         const root = path.parse(currentDir).root
 
         while (currentDir !== root) {
-            const configPath = path.join(currentDir, '.vscode-mcp-dap-debugger', 'config.json')
-            if (fs.existsSync(configPath)) {
-                try {
-                    const config = JSON.parse(await readFile(configPath, 'utf8')) as WorkspaceConfig
-                    if (this.isAlive(config.pid)) return config
-                } catch {
-                    // Ignore malformed config and keep walking up.
+            const candidatePaths = [
+                path.join(currentDir, '.vscode', 'mcp-dap-debugger.json'),
+                path.join(currentDir, '.vscode-mcp-dap-debugger', 'config.json'),
+            ]
+
+            for (const configPath of candidatePaths) {
+                if (fs.existsSync(configPath)) {
+                    try {
+                        const config = JSON.parse(await readFile(configPath, 'utf8')) as WorkspaceConfig
+                        if (this.isAlive(config.pid)) return config
+                    } catch {
+                        // Ignore malformed config and keep checking.
+                    }
                 }
             }
             currentDir = path.dirname(currentDir)
