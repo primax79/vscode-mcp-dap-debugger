@@ -12,8 +12,18 @@ stdio connection needed.
 
 ## CLI Interface
 
+You can execute commands via `npx` or directly via `node` from the installed VS Code extension folder (recommended for offline/fast execution):
+
 ```bash
+# Via npx (when published on npm)
 npx vscode-mcp-dap-debugger <command> [args]
+
+# OR directly from the installed extension path (fastest, works offline):
+# macOS / Linux:
+node ~/.vscode/extensions/alfredooliviero.vscode-mcp-dap-debugger-*/out/cli.js <command> [args]
+
+# Windows (PowerShell):
+node "$env:USERPROFILE\.vscode\extensions\alfredooliviero.vscode-mcp-dap-debugger-*\out\cli.js" <command> [args]
 ```
 
 Auto-discovery finds the right VS Code instance (port + auth token) by walking up from the
