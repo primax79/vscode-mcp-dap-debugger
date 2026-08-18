@@ -103,7 +103,7 @@ const program = new Command()
 program
     .name('vscode-mcp-dap-debugger')
     .description('CLI and MCP proxy for VS Code debugging via DAP')
-    .version('0.1.0')
+    .version('0.2.0')
     .option('--port <number>', 'Server port (disables auto-discovery)')
     .option('--domain <url>', 'Server domain', 'http://127.0.0.1')
     .option('--token <token>', 'Auth token (auto-discovered by default)')
