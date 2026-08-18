@@ -15,6 +15,7 @@ When your code fails, AI agents usually have to add `console.log` statements or 
 
 With this extension, your AI can:
 
+- **Auto-Configure Launchers:** Never struggle with `.vscode/launch.json` again. Your AI agent can inspect your project (Node.js, TypeScript, Python, Go, Rust, etc.) and automatically generate or update the required debug launch configurations.
 - **Set Breakpoints:** Dynamically add, remove, and manage breakpoints (and logpoints) in your code.
 - **Step Through Execution:** Support for stepping over, stepping into, stepping out, and continuing execution to trace the exact flow of data.
 - **Inspect Variables:** Explore local and global variables, closures, and complex object states at any paused frame.
