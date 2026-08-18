@@ -24,9 +24,13 @@ Follow these steps to set up the project locally:
 
 4. **Test the CLI standalone:**
    ```bash
-   node out/cli.js <command> [args]
+   node out/cli.js --help
    ```
-   *(For a complete reference of all available CLI commands and tools, see the `resources/skills/dap-cli-debugging.md` file, which is also used as the AI usage manual).*
+   Available commands:
+   - `node out/cli.js proxy`: Start the stdio MCP proxy (default behavior).
+   - `node out/cli.js list`: List all available MCP tools and resources provided by the debugger.
+   - `node out/cli.js call <toolName> [argsJson]`: Call a specific tool directly and print the JSON result (e.g., `node out/cli.js call list-debug-sessions`).
+   - `node out/cli.js read <resourceUri>`: Read an MCP resource directly and print the JSON result.
 
 ## 📦 Packaging & Manual Installation
 
