@@ -20,9 +20,11 @@ Follow these steps to set up the project locally:
 
 3. **Run the extension in debug mode:**
    - Open this folder in VS Code.
-   - Press `F5` to launch a new VS Code window (Extension Development Host) with the extension loaded.
+   - Press `F5` to launch a new VS Code window (Extension Development Host).
+   - **Important:** In the new window that opens, you *must* open a folder (e.g., a sample project). The MCP server only generates its configuration and auth token when a workspace is active.
 
 4. **Test the CLI standalone:**
+   To test the CLI against your running development extension, open a terminal in your **original** VS Code window (the one where the `vscode-mcp-dap-debugger` source code is) and run:
    ```bash
    node out/cli.js --help
    ```
@@ -31,6 +33,8 @@ Follow these steps to set up the project locally:
    - `node out/cli.js list`: List all available MCP tools and resources provided by the debugger.
    - `node out/cli.js call <toolName> [argsJson]`: Call a specific tool directly and print the JSON result (e.g., `node out/cli.js call list-debug-sessions`).
    - `node out/cli.js read <resourceUri>`: Read an MCP resource directly and print the JSON result.
+   
+   *(Note: Because the CLI uses a global registry in `~/.vscode-mcp-dap-debugger/` to auto-discover running instances, you can run the CLI from this original window and it will automatically find the MCP server running in your Extension Development Host).*
 
 ## 📦 Packaging & Manual Installation
 
