@@ -151,7 +151,7 @@ File coinvolti:
 - `src/cli/cli.ts`
 - `src/config/config-finder.ts`
 - `src/tools/workspace.ts`
-- `resources/skills/dap-cli-debugging.md`
+- `resources/skills/ai-debugger.md`
 
 ### Intervento richiesto
 

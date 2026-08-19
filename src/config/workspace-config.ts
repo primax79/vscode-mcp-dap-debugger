@@ -16,8 +16,14 @@ const readFile = promisify(fs.readFile)
 const mkdir = promisify(fs.mkdir)
 const unlink = promisify(fs.unlink)
 
-const SKILL_NAME = 'dap-cli-debugging'
-const SKILL_CONSENT_KEY = 'vscode-mcp-dap-debugger.skillInjectionConsent'
+const SKILL_NAME = 'ai-debugger'
+
+// Exported so any other write path that installs these guides (e.g. the
+// Monitor Panel's manual buttons) can mark the same consent as already
+// granted, instead of leaving it unset and having this class's automatic
+// on-activation check prompt again for a workspace the user just configured
+// by hand a moment ago.
+export const SKILL_CONSENT_KEY = 'vscode-mcp-dap-debugger.skillInjectionConsent'
 
 export interface WorkspaceConfig {
     vscodeInstanceId: string
@@ -95,7 +101,7 @@ export class WorkspaceConfigManager {
      * Writes/updates the AI-agent skill guide for each configured environment
      * (Claude Code, Gemini CLI, Kilo Code, plus a marked section in AGENTS.md
      * for Codex CLI and similar tools). Each environment is independently
-     * configurable via "vscodeDebugMcp.agentSkills.<id>.*" - enabled, scope
+     * configurable via "vscodeMcpDapDebugger.agentSkills.<id>.*" - enabled, scope
      * (project/global/both), and onlyIfAlreadyPresent (only write into a
      * location whose base folder/file already exists, instead of creating it
      * from scratch). A SKILL.md that already exists at the target path is only
@@ -117,7 +123,7 @@ export class WorkspaceConfigManager {
         const content = await readFile(skillSourcePath, 'utf8')
 
         const workspaceRoot = this.workspaceFolder.uri.fsPath
-        const config = vscode.workspace.getConfiguration('vscodeDebugMcp')
+        const config = vscode.workspace.getConfiguration('vscodeMcpDapDebugger')
         const agentsMdSection = buildAgentsMdSection(content)
 
         // No legacy-unmodified fallback: a SKILL.md written before the
@@ -156,7 +162,7 @@ export class WorkspaceConfigManager {
         if (written.length > 0) {
             void vscode.window.showInformationMessage(
                 `VSCode MCP DAP Debugger wrote/updated AI-agent guides for: ${written.map((r) => r.label).join(', ')}. ` +
-                'Configure per environment via the "vscodeDebugMcp.agentSkills.*" settings.'
+                'Configure per environment via the "vscodeMcpDapDebugger.agentSkills.*" settings.'
             )
         }
     }

@@ -8,13 +8,14 @@ This enables AI coding agents (such as **Claude Code, Kilo Code, Gemini CLI, Cur
 
 ## Features
 
-- **Launcher Auto-Configuration:** Analyzes the workspace (Node.js, TypeScript, Python, Go, Rust, etc.) and generates or updates `.vscode/launch.json` configurations prior to starting a debug session.
+- **Launcher Auto-Configuration:** Analyzes the workspace (Node.js, TypeScript, Python, Go, Rust, etc.) and generates or updates `.vscode/launch.json` configurations prior to starting a debug session - including **attach configurations for a service running inside Docker Compose**, inspecting the referenced compose file for exposed debug ports and container names.
 - **Breakpoint Management:** Programmatically adds, removes, and lists breakpoints, conditional breakpoints, and logpoints.
 - **Execution Control:** Controls step-over, step-into, step-out, pause, continue, and stop operations.
 - **Variable Inspection:** Reads local, global, closure, and nested variable states across active stack frames.
 - **Expression Evaluation:** Evaluates expressions directly in the context of the paused frame.
 - **Multi-Session & Multi-Thread Support:** Tracks all active debug sessions and worker threads with explicit `sessionId` and `threadId` routing.
 - **Exception & Log Capture:** Retrieves raw DAP protocol messages, debug console output, and exception traces.
+- **Monitor Panel:** A status dashboard (server state, port, workspace config) with an AI Agent Skills table to install, reinstall, or check the status of the skill guide per environment (Claude Code, Gemini CLI, Kilo Code, AGENTS.md) without touching files by hand.
 
 ---
 
@@ -29,6 +30,10 @@ This enables AI coding agents (such as **Claude Code, Kilo Code, Gemini CLI, Cur
    - Open your project folder in VS Code.
    - Verify the status bar shows `● Debug MCP:8891` (the MCP server starts automatically by default upon workspace load).
 
+   ![Status bar showing the Debug MCP server running](imgs/screen_debug_bar.png)
+
+   - If the project already has a `.claude`, `.gemini`, or `.kilo` folder (or an `AGENTS.md`), a prompt asks permission before writing the AI-agent skill guide there - this only appears once per workspace. You can also install/reinstall it anytime from the Monitor Panel's "AI Agent Skills" table (`Debug MCP: Open Monitor Panel`).
+
 3. **Launch your AI Assistant & Approve MCP:**
    - Open a terminal inside your project directory.
    - Launch your AI coding assistant (e.g. `claude` or `kilo`).
@@ -37,6 +42,7 @@ This enables AI coding agents (such as **Claude Code, Kilo Code, Gemini CLI, Cur
 4. **Debug with AI:**
    - Ask your AI assistant to debug a specific issue (e.g. *"Set a breakpoint in `app.js` and trace the calculation error"*).
    - The agent will discover the tools and control the active VS Code debugger.
+   - This also covers launcher setup itself - e.g. *"Configure my launcher to debug the service in `docker-compose.yml` and set a breakpoint in `src/worker.py`"* - the agent inspects the compose file for the service's exposed debug port before writing the attach configuration.
 
 > **Note on approval prompts:** Claude Code (and similar CLIs) treat project-scoped MCP servers declared in `.mcp.json` as untrusted until explicitly approved — this is a security gate, not a bug. The prompt only appears when the CLI starts a new session in the project directory: if a session was already running before the server was configured, it won't show up retroactively. Start (or restart) your AI assistant session in the project folder to trigger the prompt, then approve `dap-proxy` (or your configured server name) when asked. Check the current state anytime with `claude mcp list`.
 
@@ -55,17 +61,17 @@ Ready-to-run sample projects demonstrating debugging workflows from simple to ad
 
 ## Extension Settings
 
-All configuration options are available under the `vscodeDebugMcp.*` namespace in `settings.json`:
+All configuration options are available under the `vscodeMcpDapDebugger.*` namespace in `settings.json`:
 
 | Setting | Default | Description |
 |---|---|---|
-| `vscodeDebugMcp.server.autoStart` | `true` | Automatically start the MCP server when opening a workspace. |
-| `vscodeDebugMcp.server.port` | `8891` | Preferred port for the local MCP server. If busy, the next available port is bound. |
-| `vscodeDebugMcp.agentSkills.*` | `true` | Configure auto-injection of skills per environment (Claude, Gemini, Kilo, AGENTS.md). |
-| `vscodeDebugMcp.server.dapLogCapacity` | `500` | Maximum number of DAP protocol messages retained per session. |
-| `vscodeDebugMcp.server.consoleOutputCapacity` | `500` | Maximum number of console output lines retained per session. |
-| `vscodeDebugMcp.server.exceptionCapacity` | `50` | Maximum number of exception records retained per session. |
-| `vscodeDebugMcp.server.terminatedSessionRetentionMinutes` | `5` | Retention window (in minutes) for terminated session data before eviction. |
+| `vscodeMcpDapDebugger.server.autoStart` | `true` | Automatically start the MCP server when opening a workspace. |
+| `vscodeMcpDapDebugger.server.port` | `8891` | Preferred port for the local MCP server. If busy, the next available port is bound. |
+| `vscodeMcpDapDebugger.agentSkills.*` | `true` | Configure auto-injection of skills per environment (Claude, Gemini, Kilo, AGENTS.md). |
+| `vscodeMcpDapDebugger.server.dapLogCapacity` | `500` | Maximum number of DAP protocol messages retained per session. |
+| `vscodeMcpDapDebugger.server.consoleOutputCapacity` | `500` | Maximum number of console output lines retained per session. |
+| `vscodeMcpDapDebugger.server.exceptionCapacity` | `50` | Maximum number of exception records retained per session. |
+| `vscodeMcpDapDebugger.server.terminatedSessionRetentionMinutes` | `5` | Retention window (in minutes) for terminated session data before eviction. |
 
 ---
 

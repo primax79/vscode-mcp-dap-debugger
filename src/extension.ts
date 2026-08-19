@@ -10,6 +10,7 @@ let statusBarItem: vscode.StatusBarItem
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     try {
         state.extensionPath = context.extensionPath
+        state.workspaceState = context.workspaceState
         statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100)
         statusBarItem.command = 'vscode-mcp-dap-debugger.openMonitorPanel'
         statusBarItem.show()
@@ -20,7 +21,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         registerCommands(context)
         context.subscriptions.push(registerDapTracker())
 
-        const autoStart = vscode.workspace.getConfiguration('vscodeDebugMcp').get<boolean>('server.autoStart', true)
+        const autoStart = vscode.workspace.getConfiguration('vscodeMcpDapDebugger').get<boolean>('server.autoStart', true)
         if (autoStart) {
             updateStatusBar('initializing')
             await startServer()

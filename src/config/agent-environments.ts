@@ -90,8 +90,8 @@ export const SKILL_ENVIRONMENTS: SkillEnvironment[] = [
 // established "global" location any tool reads), used by Codex CLI and a
 // growing set of other coding agents as a generic instructions file.
 export const AGENTS_MD_RELATIVE_PATH = 'AGENTS.md'
-const AGENTS_MD_MARKER_BEGIN = '<!-- BEGIN vscode-mcp-dap-debugger:dap-cli-debugging -->'
-const AGENTS_MD_MARKER_END = '<!-- END vscode-mcp-dap-debugger:dap-cli-debugging -->'
+export const AGENTS_MD_MARKER_BEGIN = '<!-- BEGIN vscode-mcp-dap-debugger:ai-debugger -->'
+const AGENTS_MD_MARKER_END = '<!-- END vscode-mcp-dap-debugger:ai-debugger -->'
 
 export interface InjectionSettings {
     enabled: boolean

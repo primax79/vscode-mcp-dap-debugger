@@ -1,21 +1,21 @@
 import * as vscode from 'vscode'
 import * as path from 'path'
 import * as fs from 'fs'
-import * as os from 'os'
 import { state } from './state'
-import type { WorkspaceConfig } from './config/workspace-config'
+import { SKILL_CONSENT_KEY, type WorkspaceConfig } from './config/workspace-config'
 import {
     SKILL_ENVIRONMENTS,
     injectSkillEnvironment,
     injectAgentsMdSection,
     buildAgentsMdSection,
     AGENTS_MD_RELATIVE_PATH,
+    AGENTS_MD_MARKER_BEGIN,
 } from './config/agent-environments'
 
-const SKILL_NAME = 'dap-cli-debugging'
+const SKILL_NAME = 'ai-debugger'
 
 export function createMonitoringPanel(): void {
-    const panel = vscode.window.createWebviewPanel('vscodeDebugMcpMonitor', 'Debug MCP Monitor', vscode.ViewColumn.One, {
+    const panel = vscode.window.createWebviewPanel('vscodeMcpDapDebuggerMonitor', 'Debug MCP Monitor', vscode.ViewColumn.One, {
         enableScripts: true,
         retainContextWhenHidden: true,
     })
@@ -88,6 +88,7 @@ async function handleInstallSkill(envId: string, scope: 'project' | 'global'): P
         )
         const written = results.filter((r) => r.written)
         if (written.length > 0) {
+            await markSkillConsentGranted()
             vscode.window.showInformationMessage('Successfully added/updated debugging instructions in AGENTS.md')
         } else {
             const reason = results[0]?.reason ?? 'Unknown'
@@ -113,11 +114,22 @@ async function handleInstallSkill(envId: string, scope: 'project' | 'global'): P
 
     const written = results.filter((r) => r.written)
     if (written.length > 0) {
+        await markSkillConsentGranted()
         vscode.window.showInformationMessage(`Successfully installed DAP debugging skill for ${env.label} (${scope}).`)
     } else {
         const reason = results[0]?.reason ?? 'Unknown'
         vscode.window.showInformationMessage(`${env.label} (${scope}): ${reason}`)
     }
+}
+
+/**
+ * A manual install from this panel is itself explicit consent - without this,
+ * the automatic on-activation check in workspace-config.ts would still find
+ * its own workspaceState flag unset and pop up asking to "install/update"
+ * something the user just installed by hand a moment ago.
+ */
+async function markSkillConsentGranted(): Promise<void> {
+    await state.workspaceState?.update(SKILL_CONSENT_KEY, 'granted')
 }
 
 function getWorkspaceConfigStatus(): { exists: boolean; config?: WorkspaceConfig } {
@@ -178,7 +190,7 @@ function getSkillStatusList(): SkillStatusItem[] {
     if (agentsMdPath && fs.existsSync(agentsMdPath)) {
         try {
             const content = fs.readFileSync(agentsMdPath, 'utf8')
-            agentsMdInstalled = content.includes('<!-- BEGIN vscode-mcp-dap-debugger:dap-cli-debugging -->')
+            agentsMdInstalled = content.includes(AGENTS_MD_MARKER_BEGIN)
         } catch {
             agentsMdInstalled = false
         }

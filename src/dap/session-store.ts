@@ -35,7 +35,7 @@ export interface TrackedSession {
 }
 
 function config() {
-    return vscode.workspace.getConfiguration('vscodeDebugMcp')
+    return vscode.workspace.getConfiguration('vscodeMcpDapDebugger')
 }
 
 function dapLogCapacity(): number {

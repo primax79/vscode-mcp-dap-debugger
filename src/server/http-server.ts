@@ -11,13 +11,13 @@ import { createAuthMiddleware } from './auth'
 
 // Fallback default, distinct from the original mcp-debug-tools (8890) so both
 // can coexist on the same machine during migration. Overridable via the
-// vscodeDebugMcp.server.port setting.
+// vscodeMcpDapDebugger.server.port setting.
 const DEFAULT_MCP_SERVER_PORT = 8891
 const SESSION_IDLE_TTL_MS = 30 * 60 * 1000
 const SESSION_SWEEP_INTERVAL_MS = 5 * 60 * 1000
 
 function preferredPort(): number {
-    return vscode.workspace.getConfiguration('vscodeDebugMcp').get<number>('server.port', DEFAULT_MCP_SERVER_PORT)
+    return vscode.workspace.getConfiguration('vscodeMcpDapDebugger').get<number>('server.port', DEFAULT_MCP_SERVER_PORT)
 }
 
 interface Session {

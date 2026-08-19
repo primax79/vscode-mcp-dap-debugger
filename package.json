@@ -65,95 +65,95 @@
     "configuration": {
       "title": "VSCode Debug MCP",
       "properties": {
-        "vscodeDebugMcp.agentSkills.claude.enabled": {
+        "vscodeMcpDapDebugger.agentSkills.claude.enabled": {
           "type": "boolean",
           "default": true,
           "description": "Write the DAP debugging skill guide for Claude Code (.claude/skills)."
         },
-        "vscodeDebugMcp.agentSkills.claude.scope": {
+        "vscodeMcpDapDebugger.agentSkills.claude.scope": {
           "type": "string",
           "enum": ["project", "global", "both"],
           "default": "project",
           "description": "Where to write the Claude Code skill: this workspace, your home directory (~/.claude), or both."
         },
-        "vscodeDebugMcp.agentSkills.claude.onlyIfAlreadyPresent": {
+        "vscodeMcpDapDebugger.agentSkills.claude.onlyIfAlreadyPresent": {
           "type": "boolean",
           "default": true,
           "description": "Only write the skill where a .claude folder already exists, instead of creating it from scratch."
         },
-        "vscodeDebugMcp.agentSkills.gemini.enabled": {
+        "vscodeMcpDapDebugger.agentSkills.gemini.enabled": {
           "type": "boolean",
           "default": true,
           "description": "Write the DAP debugging skill guide for Gemini CLI (.gemini/skills)."
         },
-        "vscodeDebugMcp.agentSkills.gemini.scope": {
+        "vscodeMcpDapDebugger.agentSkills.gemini.scope": {
           "type": "string",
           "enum": ["project", "global", "both"],
           "default": "project",
           "description": "Where to write the Gemini CLI skill: this workspace, your home directory (~/.gemini), or both."
         },
-        "vscodeDebugMcp.agentSkills.gemini.onlyIfAlreadyPresent": {
+        "vscodeMcpDapDebugger.agentSkills.gemini.onlyIfAlreadyPresent": {
           "type": "boolean",
           "default": true,
           "description": "Only write the skill where a .gemini folder already exists, instead of creating it from scratch."
         },
-        "vscodeDebugMcp.agentSkills.kilo.enabled": {
+        "vscodeMcpDapDebugger.agentSkills.kilo.enabled": {
           "type": "boolean",
           "default": true,
           "description": "Write the DAP debugging skill guide for Kilo Code (.kilo/skills)."
         },
-        "vscodeDebugMcp.agentSkills.kilo.scope": {
+        "vscodeMcpDapDebugger.agentSkills.kilo.scope": {
           "type": "string",
           "enum": ["project", "global", "both"],
           "default": "project",
           "description": "Where to write the Kilo Code skill: this workspace, your home directory (~/.kilo), or both."
         },
-        "vscodeDebugMcp.agentSkills.kilo.onlyIfAlreadyPresent": {
+        "vscodeMcpDapDebugger.agentSkills.kilo.onlyIfAlreadyPresent": {
           "type": "boolean",
           "default": true,
           "description": "Only write the skill where a .kilo folder already exists, instead of creating it from scratch."
         },
-        "vscodeDebugMcp.agentSkills.agentsMd.enabled": {
+        "vscodeMcpDapDebugger.agentSkills.agentsMd.enabled": {
           "type": "boolean",
           "default": true,
           "description": "Add/update a clearly-marked section in AGENTS.md (read by Codex CLI and other tools) describing this tool's CLI. Never touches the rest of the file."
         },
-        "vscodeDebugMcp.agentSkills.agentsMd.onlyIfAlreadyPresent": {
+        "vscodeMcpDapDebugger.agentSkills.agentsMd.onlyIfAlreadyPresent": {
           "type": "boolean",
           "default": true,
           "description": "Only update the marked section if AGENTS.md already exists in the workspace, instead of creating a new one."
         },
-        "vscodeDebugMcp.server.port": {
+        "vscodeMcpDapDebugger.server.port": {
           "type": "number",
           "default": 8891,
           "minimum": 1,
           "maximum": 65535,
           "description": "Preferred port for the local MCP server. If busy, the next free port is used automatically."
         },
-        "vscodeDebugMcp.server.autoStart": {
+        "vscodeMcpDapDebugger.server.autoStart": {
           "type": "boolean",
           "default": true,
           "description": "Start the MCP server automatically when a workspace is opened. Disable to start it manually via the \"Debug MCP: Start MCP Server\" command."
         },
-        "vscodeDebugMcp.server.dapLogCapacity": {
+        "vscodeMcpDapDebugger.server.dapLogCapacity": {
           "type": "number",
           "default": 500,
           "minimum": 1,
           "description": "Max number of raw DAP protocol messages kept per debug session."
         },
-        "vscodeDebugMcp.server.consoleOutputCapacity": {
+        "vscodeMcpDapDebugger.server.consoleOutputCapacity": {
           "type": "number",
           "default": 500,
           "minimum": 1,
           "description": "Max number of debug console output lines kept per debug session."
         },
-        "vscodeDebugMcp.server.exceptionCapacity": {
+        "vscodeMcpDapDebugger.server.exceptionCapacity": {
           "type": "number",
           "default": 50,
           "minimum": 1,
           "description": "Max number of exception records kept per debug session."
         },
-        "vscodeDebugMcp.server.terminatedSessionRetentionMinutes": {
+        "vscodeMcpDapDebugger.server.terminatedSessionRetentionMinutes": {
           "type": "number",
           "default": 5,
           "minimum": 0,

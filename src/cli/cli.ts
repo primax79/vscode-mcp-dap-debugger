@@ -3,6 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { createMcpClient } from './mcp-client'
 import { ConfigFinder } from '../config/config-finder'
 import { listToolsAndResources, callTool, readResource, type ConnectionInfo } from './cli-action'
+import packageJson from '../../package.json'
 
 function logInfo(message: string): void {
     process.stderr.write(`[vscode-mcp-dap-debugger CLI] ${message}\n`)
@@ -103,7 +104,7 @@ const program = new Command()
 program
     .name('vscode-mcp-dap-debugger')
     .description('CLI and MCP proxy for VS Code debugging via DAP')
-    .version('0.2.0')
+    .version(packageJson.version)
     .option('--port <number>', 'Server port (disables auto-discovery)')
     .option('--domain <url>', 'Server domain', 'http://127.0.0.1')
     .option('--token <token>', 'Auth token (auto-discovered by default)')

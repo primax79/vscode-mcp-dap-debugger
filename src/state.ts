@@ -12,6 +12,7 @@ class ExtensionState {
     private _serverStartTime: Date | undefined
     private _authToken: string | undefined
     private _extensionPath: string | undefined
+    private _workspaceState: vscode.Memento | undefined
     private _activePanels: vscode.WebviewPanel[] = []
 
     get extensionPath(): string | undefined {
@@ -20,6 +21,14 @@ class ExtensionState {
 
     set extensionPath(path: string | undefined) {
         this._extensionPath = path
+    }
+
+    get workspaceState(): vscode.Memento | undefined {
+        return this._workspaceState
+    }
+
+    set workspaceState(memento: vscode.Memento | undefined) {
+        this._workspaceState = memento
     }
 
     get httpServer(): Server | undefined {

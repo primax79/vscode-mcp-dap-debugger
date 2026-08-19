@@ -25,13 +25,21 @@ Follow these steps to set up the project locally:
    npm run lint        
    ```
 
-3. **Run the extension in debug mode:**
+3. **Generate the `.vsix` package:**
+
+   ```bash
+   npx @vscode/vsce package
+   ```
+
+   This runs `npm run build` for you first (via the `vscode:prepublish` script), then produces `vscode-mcp-dap-debugger-*.vsix` in the repository root - see "Packaging & Manual Installation" below to install it.
+
+4. **Run the extension in debug mode:**
 
    - Open this folder in VS Code.
    - Press `F5` to launch a new VS Code window (Extension Development Host).
    - **Important:** In the new window that opens, you *must* open a folder (e.g., a sample project). The MCP server only generates its configuration and auth token when a workspace is active.
 
-4. **Test the CLI standalone:**
+5. **Test the CLI standalone:**
 
    To test the CLI against your running development extension, open a terminal in your **original** VS Code window (the one where the `vscode-mcp-dap-debugger` source code is) and run:
 
@@ -54,7 +62,7 @@ While the official extension is available on the VS Code Marketplace, you can ma
 ### 1. Get the `.vsix` package
 
 - **Download it:** Get the latest `.vsix` file from the [Releases](https://github.com/primax79/vscode-mcp-dap-debugger/releases) page.
-- **Build it yourself:** Run `npx @vscode/vsce package` in the repository root to generate the `.vsix` file locally.
+- **Build it yourself:** See step 3 of "Local Development" above.
 
 ### 2. Install the extension
 

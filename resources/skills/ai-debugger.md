@@ -1,5 +1,5 @@
 ---
-name: dap-cli-debugging
+name: ai-debugger
 description: Control the VS Code Debugger (DAP) via CLI commands using vscode-mcp-dap-debugger. Use when debugging, setting breakpoints, stepping through code, or inspecting variables.
 ---
 
@@ -145,7 +145,7 @@ Before starting a debug session, check available configurations:
 $DAP_CLI call list-debug-configs
 ```
 
-If `.vscode/launch.json` is missing or has no matching configuration for the project, **inspect the project root** (`package.json`, `tsconfig.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, etc.) and create or append the appropriate configuration into `.vscode/launch.json`:
+If `.vscode/launch.json` is missing or has no matching configuration for the project, **inspect the project root** (`package.json`, `tsconfig.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, a referenced `docker-compose.yml`/`compose.yaml`, etc.) and create or append the appropriate configuration into `.vscode/launch.json`:
 
 ### Standard Configuration Templates
 
@@ -210,6 +210,15 @@ If `.vscode/launch.json` is missing or has no matching configuration for the pro
   "cwd": "${workspaceFolder}"
 }
 ```
+
+#### Docker Compose (attach to a running service)
+
+This is an **attach**, not a launch - read the referenced compose file (and `Dockerfile` if
+needed) for the service's exposed debug port and its code's path inside the container, then build
+an `attach`-type config (`node`/`pwa-node` or `debugpy`) pointing at that port, with
+`remoteRoot`/`pathMappings` set to the container path. If the service isn't already listening on a
+debug port, add the relevant flag to its command (`--inspect=0.0.0.0:<port>` for Node,
+`python -m debugpy --listen 0.0.0.0:<port>` for Python) and have the user restart it.
 
 ---
 
