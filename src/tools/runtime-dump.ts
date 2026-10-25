@@ -540,7 +540,7 @@ async function dumpThreadsDapMode(
     const threadEntries: Array<{
         id: number
         name: string | null
-        state: 'stopped' | 'running'
+        state: 'stopped' | 'running' | 'unknown'
         frames: Array<{
             id: number
             function: string
@@ -563,10 +563,13 @@ async function dumpThreadsDapMode(
             if (totalFrames > rawFrames.length) {
                 truncatedFrames += totalFrames - rawFrames.length
             }
+            // Some adapters (debugpy) answer stackTrace for running threads too, so the
+            // state comes from the tracked execution state, not from the request succeeding.
+            const tracked = sessionStore.getThreadExecutionState(session.id, t.id)?.state
             threadEntries.push({
                 id: t.id,
                 name: typeof t.name === 'string' ? t.name : null,
-                state: 'stopped',
+                state: tracked === 'stopped' || tracked === 'running' ? tracked : 'unknown',
                 frames: rawFrames.map((f: any) => ({
                     id: f.id,
                     function: f.name,
