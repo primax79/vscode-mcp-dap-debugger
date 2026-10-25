@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 
 - **`dump-threads` and `dump-asyncio-tasks`:** the concurrency picture of a process in one call. With debugpy they need no DAP pause (the snippet's output comes back through the debug console, base64 between markers); `dump-threads` falls back to DAP `threads`/`stackTrace` for other adapters. New `samples/04-python-async-hang` with a developer check script.
 - **Paused frame by default:** `evaluate-expression`, `get-variables-scope` and `inspect-variable` without `frameId` resolve the focused frame, then the top frame of the focused or last stopped thread of that session, and return `frameUsed`; with nothing paused `evaluate-expression` returns `frameUsed: null` and an adapter-specific `warning`.

@@ -2,7 +2,7 @@
   "name": "vscode-mcp-dap-debugger",
   "displayName": "VSCode MCP DAP Debugger",
   "description": "Give AI coding agents direct access and control over VS Code's native debugger via Model Context Protocol (MCP) and CLI",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "AlfredoOliviero",
   "license": "GPL-3.0",
   "private": false,
@@ -72,7 +72,11 @@
         },
         "vscodeMcpDapDebugger.agentSkills.claude.scope": {
           "type": "string",
-          "enum": ["project", "global", "both"],
+          "enum": [
+            "project",
+            "global",
+            "both"
+          ],
           "default": "project",
           "description": "Where to write the Claude Code skill: this workspace, your home directory (~/.claude), or both."
         },
@@ -88,7 +92,11 @@
         },
         "vscodeMcpDapDebugger.agentSkills.gemini.scope": {
           "type": "string",
-          "enum": ["project", "global", "both"],
+          "enum": [
+            "project",
+            "global",
+            "both"
+          ],
           "default": "project",
           "description": "Where to write the Gemini CLI skill: this workspace, your home directory (~/.gemini), or both."
         },
@@ -104,7 +112,11 @@
         },
         "vscodeMcpDapDebugger.agentSkills.kilo.scope": {
           "type": "string",
-          "enum": ["project", "global", "both"],
+          "enum": [
+            "project",
+            "global",
+            "both"
+          ],
           "default": "project",
           "description": "Where to write the Kilo Code skill: this workspace, your home directory (~/.kilo), or both."
         },
