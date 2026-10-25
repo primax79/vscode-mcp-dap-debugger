@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Paused frame by default:** `evaluate-expression`, `get-variables-scope` and `inspect-variable` without `frameId` resolve the focused frame, then the top frame of the focused or last stopped thread of that session, and return `frameUsed`; with nothing paused `evaluate-expression` returns `frameUsed: null` and an adapter-specific `warning`.
+- **Call stack hints:** `get-call-stack` returns frame/source presentation hints and `source.origin`, `includeDeemphasized: false` drops internal frames (`returnedFrames`, `filteredOut`), and reports the effective `justMyCode` with a hint for debugpy.
+- **Fixes:** `get-call-stack` without `threadId` no longer picks the focused thread of a different session; `get-debug-state` reports the session-resolution error (e.g. several sessions active) instead of looking like no session.
 - **Per-session breakpoint policy:** `start-debug` accepts `breakpoints: "ide" | "none" | [list]` (default `"ide"`, unchanged), applied to that session and its child sessions only, also to IDE breakpoints added during the session (`breakpointMechanism`: `rewrite` by default, `reapply` as fallback). The result reports requested and verified breakpoints and warns when an attach installs breakpoints into a live process.
 - **`start-debug` overrides:** `overrides` is shallow-merged onto the launch.json configuration (e.g. `{"justMyCode": false}`); rejected for compound configurations.
 - **Thread execution state:** `get-debug-state` returns per-thread `state`, stop `reason`/`description` and `hitBreakpoints` resolved to file:line.

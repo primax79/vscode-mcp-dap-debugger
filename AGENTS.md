@@ -222,11 +222,11 @@ one focused in the VS Code UI. Most tools accept an optional `sessionId`:
 
 | Tool | Params | Description |
 | ------ | -------- | ------------- |
-| `get-call-stack` | `sessionId?`, `threadId?`, `startFrame?`, `levels?` | Call stack frames |
+| `get-call-stack` | `sessionId?`, `threadId?`, `startFrame?`, `levels?`, `includeDeemphasized?` | Call stack frames with presentation hints; `includeDeemphasized: false` drops library/internal frames (`filteredOut` counts them). For debugpy, `justMyCode` + `hint` tell you when library frames are hidden by the adapter (restart with `start-debug` `overrides: {"justMyCode": false}`) |
 | `get-active-stack-item` | - | Currently focused thread/stack frame |
-| `get-variables-scope` | `sessionId?`, `frameId?`, `scopeName?` | All variables in scope |
-| `inspect-variable` | `variableName`, `sessionId?`, `frameId?` | Details for a variable, supports nested paths like `user.address[0].city` |
-| `evaluate-expression` | `expression`, `sessionId?`, `frameId?` | Evaluate an expression |
+| `get-variables-scope` | `sessionId?`, `frameId?`, `scopeName?` | All variables in scope; `frameUsed` says which frame |
+| `inspect-variable` | `variableName`, `sessionId?`, `frameId?` | Details for a variable, supports nested paths like `user.address[0].city`; `frameUsed` says which frame |
+| `evaluate-expression` | `expression`, `sessionId?`, `frameId?` | Evaluate an expression. Without `frameId` it uses the focused frame, else the top frame of the focused or last stopped thread of that session; `frameUsed` says which one (`null` + `warning` when nothing is paused: with debugpy the result is then empty and the output goes to `get-debug-console`) |
 | `get-thread-list` | `sessionId?` | List all threads |
 | `get-dap-log` | `sessionId?`, `limit?` | Raw DAP protocol messages for a session |
 | `get-debug-console` | `sessionId?`, `limit?`, `filter?` | Debug console/stdout/stderr output |
