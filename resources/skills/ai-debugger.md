@@ -89,12 +89,12 @@ one focused in the VS Code UI. Most tools accept an optional `sessionId`:
 
 | Tool | Params | Description |
 | ------ | -------- | ------------- |
-| `list-debug-sessions` | - | List every tracked debug session |
+| `list-debug-sessions` | `includeTerminated?` | List live debug sessions (`terminatedCount` counts the recently terminated ones; `includeTerminated: true` lists them too) |
 | `get-active-session` | - | Get the session focused in the VS Code UI |
-| `get-debug-state` | `sessionId?` | Session overview + all breakpoints |
+| `get-debug-state` | `sessionId?` | Session overview, per-thread state (`stopped`/`running`, `reason`, `hitBreakpoints` as file:line) + all breakpoints |
 | `list-debug-configs` | - | List configurations from launch.json |
 | `select-debug-config` | `configName` | Look up a debug configuration by name |
-| `start-debug` | `config` | Start a debug session |
+| `start-debug` | `config`, `overrides?`, `breakpoints?`, `breakpointMechanism?` | Start a debug session. `overrides` is merged onto the launch.json config (e.g. `{"justMyCode": false}`); `breakpoints`: `"ide"` (default, every IDE breakpoint), `"none"`, or a list `[{file, line, condition?, hitCondition?, logMessage?}]` for this session only |
 | `stop-debug` | `sessionId?` | Stop a specific (or the only/focused) debug session |
 | `get-workspace-info` | - | Current workspace + server info |
 | `list-vscode-instances` | - | List all active VS Code instances |
@@ -251,6 +251,17 @@ When attaching to or debugging live or shared services (e.g. web servers, backgr
 - **Detach vs. terminate with `stop-debug`:** Calling `stop-debug` on an attach session detaches the debugger and leaves the target process running; detach attach sessions with `stop-debug` when done. In contrast, calling `stop-debug` on a launch session terminates the program.
 
 ---
+
+### Attaching without stale breakpoints
+
+When you **attach to a live process**, VS Code installs every enabled IDE breakpoint in it, including stale ones from old sessions. Attach with `"breakpoints": "none"` (or an explicit list) so the process only stops where you decide:
+
+```bash
+dap call start-debug '{"config": "Attach to Service", "breakpoints": "none"}'
+dap call start-debug '{"config": "Attach to Service", "breakpoints": [{"file": "src/worker.py", "line": 42}]}'
+```
+
+The policy applies to this session (and its child sessions) only, also to IDE breakpoints added later; the IDE breakpoints themselves are not changed. The `start-debug` result lists `requestedBreakpoints`, the adapter's `verifiedBreakpoints` and a `warning` when an attach installs any. `get-debug-state` then tells you per thread whether it is `stopped` (and on which breakpoint) or `running`.
 
 ## Standard Debugging Workflow
 
