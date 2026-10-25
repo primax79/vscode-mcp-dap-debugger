@@ -160,6 +160,8 @@ multiple active instances and discovery picks the wrong one, use `list-vscode-in
 
 - `stdout` = pure JSON result. Always parse stdout only.
 - `stderr` = connection logs. Ignore stderr.
+- Add `--raw` to `call`/`read` to get the tool's own JSON object directly (no `content[0].text` wrapper); on a tool error it prints `{"error": "..."}`.
+- Exit codes: `0` success, `1` tool error, discovery/auth/connection error or timeout, `2` usage error (bad JSON arguments, unknown option, invalid `--port`).
 - On error, read the JSON error message, correct arguments, and retry.
 
 ### Commands
@@ -167,8 +169,8 @@ multiple active instances and discovery picks the wrong one, use `list-vscode-in
 | Command | Usage |
 | --------- | ------- |
 | **list** | `dap list` - discover all available tools and their input schemas |
-| **call** | `dap call <toolName> [jsonArgs]` - execute a specific tool |
-| **read** | `dap read <resourceUri>` - read a debugger state resource |
+| **call** | `dap call <toolName> [jsonArgs] [--raw]` - execute a specific tool |
+| **read** | `dap read <resourceUri> [--raw]` - read a debugger state resource |
 
 ## Multiple debug sessions
 

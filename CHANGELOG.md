@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **CLI `--raw` output:** `call` and `read` accept `--raw` and print the tool's own JSON object (or plain text) instead of the MCP envelope; tool errors print `{"error": "..."}`.
+- **CLI exit codes (behaviour change):** `0` success, `1` tool error (`isError`), discovery, auth, connection or timeout error, `2` usage error. A tool error now exits 1 also without `--raw` (it used to exit 0). The CLI no longer calls `process.exit()` before closing the transport, and the 30 s timeout timer is cleared.
 - **Zsh-Safe CLI Invocation:** Replaced the `$DAP_CLI` variable pattern in the AI agent skill and documentation with a portable `dap()` shell function that works identically across Bash and Zsh, handles Zsh's strict globbing rules, automatically selects the newest installed extension version, and fails with a clear message and exit code 127 if no installation is found. Added an equivalent PowerShell function and subshell execution guidance.
 - **Live Services & Pausing Warnings:** Added documentation and tool description warnings about the side effects of pausing live or shared services (requests stall until continued). Recommended logpoints on shared environments, detaching with `stop-debug` when done, and cleaning up stopped processes before disconnecting.
 - **Pause Tool Description:** Updated the `pause` execution control tool description to explicitly warn that requests stall on live services until continued.
