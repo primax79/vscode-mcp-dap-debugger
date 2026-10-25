@@ -1,4 +1,4 @@
-import { Command } from 'commander'
+import { Command, InvalidArgumentError } from 'commander'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { createMcpClient } from './mcp-client'
 import { ConfigFinder } from '../config/config-finder'
@@ -7,6 +7,14 @@ import packageJson from '../../package.json'
 
 function logInfo(message: string): void {
     process.stderr.write(`[vscode-mcp-dap-debugger CLI] ${message}\n`)
+}
+
+function parsePort(value: string): number {
+    const port = parseInt(value, 10)
+    if (isNaN(port) || port < 1 || port > 65535 || String(port) !== value.trim()) {
+        throw new InvalidArgumentError('Port must be a number between 1 and 65535.')
+    }
+    return port
 }
 
 /**
@@ -18,12 +26,14 @@ function logInfo(message: string): void {
  */
 async function resolveConnection(options: any): Promise<ConnectionInfo> {
     const domain: string = options.domain || 'http://127.0.0.1'
-    const explicitPort: number | undefined = options.port ? parseInt(options.port, 10) : undefined
+    const explicitPort: number | undefined = options.port !== undefined
+        ? (typeof options.port === 'number' ? options.port : parseInt(options.port, 10))
+        : undefined
     const explicitToken: string | undefined = options.token
 
     if (explicitPort !== undefined && (isNaN(explicitPort) || explicitPort < 1 || explicitPort > 65535)) {
         console.error('Invalid port number')
-        process.exit(1)
+        process.exit(2)
     }
 
     // Both given explicitly: trust the caller, no discovery needed.
@@ -101,13 +111,35 @@ async function startProxy(connection: ConnectionInfo): Promise<void> {
 
 const program = new Command()
 
+program.exitOverride((err) => {
+    if (err.code === 'commander.helpDisplayed' || err.code === 'commander.help' || err.code === 'commander.version') {
+        process.exit(0)
+    }
+    process.exit(2)
+})
+
 program
     .name('vscode-mcp-dap-debugger')
     .description('CLI and MCP proxy for VS Code debugging via DAP')
     .version(packageJson.version)
-    .option('--port <number>', 'Server port (disables auto-discovery)')
+    .option('--port <number>', 'Server port (disables auto-discovery)', parsePort)
     .option('--domain <url>', 'Server domain', 'http://127.0.0.1')
     .option('--token <token>', 'Auth token (auto-discovered by default)')
+    .addHelpText(
+        'after',
+        `
+Output formatting:
+  --raw                       In "call" and "read", unwrap the response: pretty-prints JSON text,
+                              prints plain text directly, or outputs {"error": "<text>"} on failure.`
+    )
+    .addHelpText(
+        'afterAll',
+        `
+Exit codes:
+  0  Success
+  1  Tool error (isError), discovery, auth, connection or timeout error
+  2  Usage error (invalid JSON arguments, unknown command/option, missing argument, invalid --port)`
+    )
 
 program
     .command('proxy', { isDefault: true })
@@ -117,19 +149,46 @@ program
 program
     .command('list')
     .description('List all available tools and resources')
-    .action(async () => listToolsAndResources(await resolveConnection(program.opts())))
+    .action(async () => {
+        const connection = await resolveConnection(program.opts())
+        const outcome = await listToolsAndResources(connection)
+        process.exitCode = outcome.exitCode
+    })
 
 program
     .command('call <toolName> [argsJson]')
     .description('Call a tool directly and print the JSON result')
-    .action(async (toolName, argsJson) => callTool(await resolveConnection(program.opts()), toolName, argsJson))
+    .option('--raw', 'Print unwrapped content directly (JSON parsed or raw text)')
+    .action(async (toolName, argsJson, cmdOptions) => {
+        if (argsJson) {
+            try {
+                JSON.parse(argsJson)
+            } catch {
+                process.stderr.write(`[vscode-mcp-dap-debugger CLI] Invalid JSON arguments: ${argsJson}\n`)
+                process.exitCode = 2
+                return
+            }
+        }
+        const connection = await resolveConnection(program.opts())
+        const outcome = await callTool(connection, toolName, argsJson, { raw: cmdOptions.raw })
+        process.exitCode = outcome.exitCode
+    })
 
 program
     .command('read <resourceUri>')
     .description('Read a resource directly and print the JSON result')
-    .action(async (resourceUri) => readResource(await resolveConnection(program.opts()), resourceUri))
+    .option('--raw', 'Print unwrapped content directly (JSON parsed or raw text)')
+    .action(async (resourceUri, cmdOptions) => {
+        const connection = await resolveConnection(program.opts())
+        const outcome = await readResource(connection, resourceUri, { raw: cmdOptions.raw })
+        process.exitCode = outcome.exitCode
+    })
 
-program.parseAsync(process.argv).catch((error) => {
-    console.error('Fatal error:', error)
-    process.exit(1)
-})
+export { formatRawToolResult, formatRawResourceResult } from './cli-action'
+
+if (require.main === module) {
+    program.parseAsync(process.argv).catch((error) => {
+        console.error('Fatal error:', error)
+        process.exit(1)
+    })
+}
