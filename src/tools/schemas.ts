@@ -6,6 +6,13 @@ const sessionId = z.string().optional().describe(
 const threadId = z.number().int().optional().describe(
     'Target thread ID. Defaults to the focused thread, or the first thread reported by the debug adapter.'
 )
+const frameId = z
+    .number()
+    .int()
+    .optional()
+    .describe(
+        'Stack frame ID. Defaults to the focused frame, top frame of the focused thread, or top frame of the last stopped thread.'
+    )
 
 const breakpointShape = {
     file: z.string().describe('Relative path from workspace root, or an absolute path'),
@@ -71,12 +78,12 @@ export const inputSchemas = {
     'evaluate-expression': {
         expression: z.string().describe('Expression to evaluate in the debug context'),
         sessionId,
-        frameId: z.number().int().optional().describe('Stack frame ID; defaults to the focused frame'),
+        frameId,
     },
     'inspect-variable': {
         variableName: z.string().describe('Variable name, optionally with a nested path, e.g. "user.address[0].city"'),
         sessionId,
-        frameId: z.number().int().optional(),
+        frameId,
     },
     'get-active-stack-item': {},
     'get-call-stack': {
@@ -84,10 +91,16 @@ export const inputSchemas = {
         threadId,
         startFrame: z.number().int().optional(),
         levels: z.number().int().optional(),
+        includeDeemphasized: z
+            .boolean()
+            .optional()
+            .describe(
+                'Include deemphasized/library frames (subtle frame hint or deemphasize source hint). Defaults to true; pass false to filter them out.'
+            ),
     },
     'get-variables-scope': {
         sessionId,
-        frameId: z.number().int().optional(),
+        frameId,
         scopeName: z.string().optional().describe('Filter by scope name (e.g. "Local", "Global")'),
     },
     'get-thread-list': { sessionId },

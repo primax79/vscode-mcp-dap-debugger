@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 import { inputSchemas } from './schemas'
-import { ok, err, withErrorHandling, requireSession } from './shared'
+import { ok, err, withErrorHandling } from './shared'
 import {
     sessionStore,
     type TrackedSession,
@@ -186,11 +186,16 @@ export const getDebugStateTool = {
         inputSchema: inputSchemas['get-debug-state'],
     },
     handler: async (args: { sessionId?: string }) => withErrorHandling(async () => {
-        const resolved = requireSession(args.sessionId)
+        const resolved = sessionStore.resolveSession(args.sessionId)
         const breakpoints = listBreakpointsData()
 
-        if ('errorResult' in resolved) {
-            return ok({ hasActiveSession: false, breakpointCount: breakpoints.length, breakpoints })
+        if ('error' in resolved) {
+            return ok({
+                hasActiveSession: false,
+                error: resolved.error,
+                breakpointCount: breakpoints.length,
+                breakpoints,
+            })
         }
 
         const threads = await buildDebugStateThreads(resolved.session)
