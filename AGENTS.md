@@ -67,8 +67,10 @@ These were deliberate fixes over the original tool this was rewritten from. Read
    regex comment-stripper corrupts any string containing `//` or `/* */` (e.g. a URL).
 5. **CLI port and token are resolved as one identity** (`cli/cli.ts`): never combine `--port` from
    one instance with an auto-discovered token from another.
-6. **`agent-environments.ts` never overwrites a file that already exists** at the target path,
-   regardless of settings - a customized `SKILL.md` or `AGENTS.md` section is left alone. AGENTS.md
+6. **`agent-environments.ts` never overwrites a customized file.** An existing `SKILL.md` is
+   replaced only when it still ends with the managed hash marker of its own unmodified body
+   (`canReplaceManagedContent`), i.e. it is our own untouched copy; a hand-edited one, or one written
+   before the marker existed, is left alone regardless of settings. AGENTS.md
    specifically is updated via a marked section (`<!-- BEGIN/END vscode-mcp-dap-debugger:... -->`),
    never a full-file overwrite, since it commonly holds hand-written project instructions.
 7. **The registry (`config/registry.ts`) never evicts a different, still-live instance** that
