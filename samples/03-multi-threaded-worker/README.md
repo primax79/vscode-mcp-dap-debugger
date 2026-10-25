@@ -19,3 +19,19 @@ In `main.js`, multiple concurrent tasks are dispatched to Node.js `worker_thread
 
 > **Sample Prompt:**
 > *"Run `main.js` with the debugger attached. Use `get-thread-list` to check all worker threads, set a breakpoint in `worker.js` inside `executeTask`, inspect the `task` variable for each thread, and identify why worker 3 throws an error."*
+
+## Long-Running Attach Mode (`--loop`)
+
+To test attaching to an already-running process (and per-session breakpoint policies such as `breakpoints: "none"` or `breakpoints: [...]`), start the worker pool in loop mode with the Node inspector listening on port 9229:
+
+```bash
+node --inspect=9229 main.js --loop
+```
+
+In `--loop` mode, `main.js` stays alive and dispatches a worker task every second (`1000ms`). Without `--loop`, `main.js` runs a single batch and exits as before.
+
+Then attach using the `"Attach to Worker Pool"` configuration in `.vscode/launch.json`:
+
+```bash
+$DAP_CLI call start-debug '{"config": "Attach to Worker Pool", "breakpoints": "none"}'
+```

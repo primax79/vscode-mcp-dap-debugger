@@ -51,4 +51,30 @@ async function startBatchProcessing() {
     console.log(JSON.stringify(results, null, 2));
 }
 
-startBatchProcessing();
+function startLoopMode() {
+    let tick = 0;
+    let running = false;
+    console.log(`--- Loop Mode Active (pid=${process.pid}, interval=1000ms) ---`);
+
+    setInterval(async () => {
+        if (running) return;
+        running = true;
+        tick += 1;
+        try {
+            const task = TASKS[(tick - 1) % TASKS.length];
+            console.log(`[tick ${tick}] Running task ${task.id} (${task.type})`);
+            const res = await runWorkerTask(task);
+            console.log(`[tick ${tick}] Result for task ${task.id}:`, res);
+        } catch (err) {
+            console.error(`[tick ${tick}] Worker error:`, err.message);
+        } finally {
+            running = false;
+        }
+    }, 1000);
+}
+
+if (process.argv.includes('--loop')) {
+    startLoopMode();
+} else {
+    startBatchProcessing();
+}

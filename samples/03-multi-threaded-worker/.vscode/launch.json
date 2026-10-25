@@ -10,6 +10,16 @@
             ],
             "program": "${workspaceFolder}/main.js",
             "autoAttachChildProcesses": true
+        },
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Attach to Worker Pool",
+            "port": 9229,
+            "restart": false,
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
         }
     ]
 }

@@ -29,12 +29,37 @@ export const inputSchemas = {
     },
     'list-breakpoints': {},
 
-    'list-debug-sessions': {},
+    'list-debug-sessions': {
+        includeTerminated: z
+            .boolean()
+            .optional()
+            .describe('Include recently-terminated sessions (status: "terminated"). Defaults to false.'),
+    },
     'get-active-session': {},
     'get-debug-state': { sessionId },
     'list-debug-configs': {},
     'select-debug-config': { configName: z.string().describe('Debug configuration name to select') },
-    'start-debug': { config: z.string().describe('Configuration name from launch.json') },
+    'start-debug': {
+        config: z.string().describe('Configuration name from launch.json'),
+        overrides: z
+            .record(z.string(), z.unknown())
+            .optional()
+            .describe(
+                'Optional configuration properties shallow-merged onto the named launch.json configuration (e.g. {"justMyCode": false})'
+            ),
+        breakpoints: z
+            .union([z.enum(['ide', 'none']), z.array(z.object(breakpointShape))])
+            .optional()
+            .describe(
+                'Per-session breakpoint policy: "ide" (default, keep workspace breakpoints), "none" (install no breakpoints), or an explicit list of breakpoints for this session'
+            ),
+        breakpointMechanism: z
+            .enum(['rewrite', 'reapply'])
+            .optional()
+            .describe(
+                'Mechanism for enforcing per-session breakpoints: "rewrite" (default, rewrite setBreakpoints in place) or "reapply" (send follow-up customRequest)'
+            ),
+    },
     'stop-debug': { sessionId },
 
     continue: { sessionId, threadId },
