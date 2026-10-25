@@ -129,6 +129,8 @@ one focused in the VS Code UI. Most tools accept an optional `sessionId`:
 | `get-variables-scope` | `sessionId?`, `frameId?`, `scopeName?` | All variables in scope; `frameUsed` says which frame |
 | `inspect-variable` | `variableName`, `sessionId?`, `frameId?` | Details for a variable, supports nested paths like `user.address[0].city`; `frameUsed` says which frame |
 | `evaluate-expression` | `expression`, `sessionId?`, `frameId?` | Evaluate an expression. Without `frameId` it uses the focused frame, else the top frame of the focused or last stopped thread of that session; `frameUsed` says which one (`null` + `warning` when nothing is paused: with debugpy the result is then empty and the output goes to `get-debug-console`) |
+| `dump-threads` | `sessionId?`, `mode?`, `maxThreads?`, `maxFrames?`, `maxChars?`, `includeDebuggerThreads?`, `timeoutMs?` | Every thread with its stack (innermost frame last) in one call. With debugpy (`mode` auto/`python`) there is no DAP pause: a short snippet runs on one application thread. Other adapters (`dap` mode) can only walk stopped threads |
+| `dump-asyncio-tasks` | `sessionId?`, `maxTasks?`, `maxFrames?`, `maxChars?`, `timeoutMs?` | Python only: pending asyncio tasks per event loop, with coroutine frame, await chain and the future each one waits on; no DAP pause |
 | `get-thread-list` | `sessionId?` | List all threads |
 | `get-dap-log` | `sessionId?`, `limit?` | Raw DAP protocol messages for a session |
 | `get-debug-console` | `sessionId?`, `limit?`, `filter?` | Debug console/stdout/stderr output |
@@ -251,6 +253,18 @@ When attaching to or debugging live or shared services (e.g. web servers, backgr
 - **Detach vs. terminate with `stop-debug`:** Calling `stop-debug` on an attach session detaches the debugger and leaves the target process running; detach attach sessions with `stop-debug` when done. In contrast, calling `stop-debug` on a launch session terminates the program.
 
 ---
+
+### Hangs in live Python services
+
+For a stuck worker or request in a debugpy service, start with the non-pausing dumps instead of `pause`:
+
+```bash
+dap call start-debug '{"config": "Attach to Service", "breakpoints": "none"}'
+dap call dump-threads
+dap call dump-asyncio-tasks
+```
+
+`dump-threads` shows where every thread is (a thread in `acquire`, a loop idle in `select`); `dump-asyncio-tasks` shows what each pending task awaits. If every thread is idle and no task is pending, the work already finished: look for a swallowed error. Try it on `samples/04-python-async-hang`.
 
 ### Attaching without stale breakpoints
 
