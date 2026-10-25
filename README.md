@@ -43,8 +43,55 @@ This enables AI coding agents (such as **Claude Code, Kilo Code, Gemini CLI, Cur
    - Ask your AI assistant to debug a specific issue (e.g. *"Set a breakpoint in `app.js` and trace the calculation error"*).
    - The agent will discover the tools and control the active VS Code debugger.
    - This also covers launcher setup itself - e.g. *"Configure my launcher to debug the service in `docker-compose.yml` and set a breakpoint in `src/worker.py`"* - the agent inspects the compose file for the service's exposed debug port before writing the attach configuration.
+   - You can also control the debugger directly from your terminal using the CLI — see [Calling the CLI from a shell](#calling-the-cli-from-a-shell).
 
 > **Note on approval prompts:** Claude Code (and similar CLIs) treat project-scoped MCP servers declared in `.mcp.json` as untrusted until explicitly approved — this is a security gate, not a bug. The prompt only appears when the CLI starts a new session in the project directory: if a session was already running before the server was configured, it won't show up retroactively. Start (or restart) your AI assistant session in the project folder to trigger the prompt, then approve `dap-proxy` (or your configured server name) when asked. Check the current state anytime with `claude mcp list`.
+
+---
+
+## Calling the CLI from a Shell
+
+You can interact with the debugger directly from your terminal without a persistent MCP client session. Define the `dap` function in your shell:
+
+```bash
+# macOS / Linux (bash or zsh)
+dap() {
+    [ -n "$ZSH_VERSION" ] && setopt local_options null_glob
+    local f
+    f=$(ls -d ~/.vscode/extensions/alfredooliviero.vscode-mcp-dap-debugger-*/out/cli.js 2>/dev/null | sort -V | tail -n 1)
+    [ -f "$f" ] || { echo "vscode-mcp-dap-debugger CLI not found under ~/.vscode/extensions" >&2; return 127; }
+    node "$f" "$@"
+}
+```
+
+```powershell
+# Windows (PowerShell)
+function dap {
+    $cli = Get-ChildItem "$env:USERPROFILE\.vscode\extensions\alfredooliviero.vscode-mcp-dap-debugger-*\out\cli.js" -ErrorAction SilentlyContinue |
+        Sort-Object { [version]($_.Directory.Parent.Name -replace '.*-', '') } |
+        Select-Object -Last 1
+    if (-not $cli) {
+        Write-Error "vscode-mcp-dap-debugger CLI not found under ~/.vscode/extensions"
+        return
+    }
+    node $cli.FullName @args
+}
+```
+
+> **Note for AI agents:** If your shell tool starts a fresh non-interactive shell per call, define the function in the same command:
+> `dap() { [ -n "$ZSH_VERSION" ] && setopt local_options null_glob; local f; f=$(ls -d ~/.vscode/extensions/alfredooliviero.vscode-mcp-dap-debugger-*/out/cli.js 2>/dev/null | sort -V | tail -n 1); [ -f "$f" ] || { echo "vscode-mcp-dap-debugger CLI not found under ~/.vscode/extensions" >&2; return 127; }; node "$f" "$@"; }; dap call ...`
+
+Once defined, query or execute commands directly:
+
+```bash
+# Discover available tools and resources
+dap list
+
+# Call a tool directly
+dap call list-debug-sessions
+dap call start-debug '{"config": "Launch Program"}'
+dap call add-breakpoint '{"file": "src/app.ts", "line": 15}'
+```
 
 ---
 

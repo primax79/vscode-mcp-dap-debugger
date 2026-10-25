@@ -13,26 +13,43 @@ stdio connection needed.
 ## CLI Interface
 
 The CLI ships inside the installed VS Code extension - no separate package install needed.
-Define `$DAP_CLI` once, then use it for every command below:
+Define the `dap` shell function once (or include it in your shell profile / command invocation), then use it for every command below:
 
 ```bash
-# macOS / Linux (relies on the shell expanding *, so run this in bash/zsh, not `sh -c` with globbing disabled)
-export DAP_CLI='node ~/.vscode/extensions/alfredooliviero.vscode-mcp-dap-debugger-*/out/cli.js'
+# macOS / Linux (bash or zsh)
+dap() {
+    [ -n "$ZSH_VERSION" ] && setopt local_options null_glob
+    local f
+    f=$(ls -d ~/.vscode/extensions/alfredooliviero.vscode-mcp-dap-debugger-*/out/cli.js 2>/dev/null | sort -V | tail -n 1)
+    [ -f "$f" ] || { echo "vscode-mcp-dap-debugger CLI not found under ~/.vscode/extensions" >&2; return 127; }
+    node "$f" "$@"
+}
 ```
 
 ```powershell
-# Windows (PowerShell) - PowerShell does not glob-expand * for external command
-# arguments, so resolve the path explicitly instead of embedding the wildcard:
-$cliPath = (Get-ChildItem "$env:USERPROFILE\.vscode\extensions\alfredooliviero.vscode-mcp-dap-debugger-*\out\cli.js").FullName
-$DAP_CLI = "node `"$cliPath`""
+# Windows (PowerShell)
+function dap {
+    $cli = Get-ChildItem "$env:USERPROFILE\.vscode\extensions\alfredooliviero.vscode-mcp-dap-debugger-*\out\cli.js" -ErrorAction SilentlyContinue |
+        Sort-Object { [version]($_.Directory.Parent.Name -replace '.*-', '') } |
+        Select-Object -Last 1
+    if (-not $cli) {
+        Write-Error "vscode-mcp-dap-debugger CLI not found under ~/.vscode/extensions"
+        return
+    }
+    node $cli.FullName @args
+}
 ```
 
+> **Note for AI agents:** If your shell tool starts a fresh non-interactive shell per call, you must define the function in the same command:
+> `dap() { [ -n "$ZSH_VERSION" ] && setopt local_options null_glob; local f; f=$(ls -d ~/.vscode/extensions/alfredooliviero.vscode-mcp-dap-debugger-*/out/cli.js 2>/dev/null | sort -V | tail -n 1); [ -f "$f" ] || { echo "vscode-mcp-dap-debugger CLI not found under ~/.vscode/extensions" >&2; return 127; }; node "$f" "$@"; }; dap call ...`
+
 (Optional) If the `vscode-mcp-dap-debugger` npm package is installed globally, or resolves via
-`npx` (e.g. run from this project's own source tree), set `DAP_CLI` to `npx vscode-mcp-dap-debugger`
-instead - everything below uses `$DAP_CLI` as-is either way.
+`npx` (e.g. run from this project's own source tree), you can define `dap` as:
+`dap() { npx vscode-mcp-dap-debugger "$@"; }` (or in PowerShell: `function dap { npx vscode-mcp-dap-debugger @args }`)
+instead - everything below uses `dap <command>` either way.
 
 ```bash
-$DAP_CLI <command> [args]
+dap <command> [args]
 ```
 
 Auto-discovery finds the right VS Code instance (port + auth token) by walking up from the
@@ -51,9 +68,9 @@ multiple active instances and discovery picks the wrong one, use `list-vscode-in
 
 | Command | Usage |
 | --------- | ------- |
-| **list** | `$DAP_CLI list` - discover all available tools and their input schemas |
-| **call** | `$DAP_CLI call <toolName> [jsonArgs]` - execute a specific tool |
-| **read** | `$DAP_CLI read <resourceUri>` - read a debugger state resource |
+| **list** | `dap list` - discover all available tools and their input schemas |
+| **call** | `dap call <toolName> [jsonArgs]` - execute a specific tool |
+| **read** | `dap read <resourceUri>` - read a debugger state resource |
 
 ## Multiple debug sessions
 
@@ -119,22 +136,22 @@ one focused in the VS Code UI. Most tools accept an optional `sessionId`:
 
 ```bash
 # Check what's running
-$DAP_CLI call list-debug-sessions
+dap call list-debug-sessions
 
 # Set a conditional breakpoint / a logpoint
-$DAP_CLI call add-breakpoint '{"file": "src/app.ts", "line": 15, "condition": "x > 10"}'
-$DAP_CLI call add-breakpoint '{"file": "src/app.ts", "line": 15, "logMessage": "x = {x}"}'
+dap call add-breakpoint '{"file": "src/app.ts", "line": 15, "condition": "x > 10"}'
+dap call add-breakpoint '{"file": "src/app.ts", "line": 15, "logMessage": "x = {x}"}'
 
 # Start debugging with a named config
-$DAP_CLI call start-debug '{"config": "Launch Program"}'
+dap call start-debug '{"config": "Launch Program"}'
 
 # Step and inspect (targeting a specific session once more than one is active)
-$DAP_CLI call step-over '{"sessionId": "abc123"}'
-$DAP_CLI call get-variables-scope '{"sessionId": "abc123"}'
-$DAP_CLI call inspect-variable '{"variableName": "user.address[0].city"}'
+dap call step-over '{"sessionId": "abc123"}'
+dap call get-variables-scope '{"sessionId": "abc123"}'
+dap call inspect-variable '{"variableName": "user.address[0].city"}'
 
 # Evaluate an expression at the current breakpoint
-$DAP_CLI call evaluate-expression '{"expression": "arr.length"}'
+dap call evaluate-expression '{"expression": "arr.length"}'
 ```
 
 ## 🛠️ Step 0: Debug Configuration Setup (`.vscode/launch.json`)
@@ -142,7 +159,7 @@ $DAP_CLI call evaluate-expression '{"expression": "arr.length"}'
 Before starting a debug session, check available configurations:
 
 ```bash
-$DAP_CLI call list-debug-configs
+dap call list-debug-configs
 ```
 
 If `.vscode/launch.json` is missing or has no matching configuration for the project, **inspect the project root** (`package.json`, `tsconfig.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, a referenced `docker-compose.yml`/`compose.yaml`, etc.) and create or append the appropriate configuration into `.vscode/launch.json`:
@@ -219,6 +236,17 @@ an `attach`-type config (`node`/`pwa-node` or `debugpy`) pointing at that port, 
 `remoteRoot`/`pathMappings` set to the container path. If the service isn't already listening on a
 debug port, add the relevant flag to its command (`--inspect=0.0.0.0:<port>` for Node,
 `python -m debugpy --listen 0.0.0.0:<port>` for Python) and have the user restart it.
+
+---
+
+## Live Services
+
+When attaching to or debugging live or shared services (e.g. web servers, background workers, microservices):
+
+- **Pausing halts request handling:** Calling `pause`, hitting a breakpoint, and breakpoints already set in the IDE when attaching all stop request handling. On a live service, incoming requests stall and time out while threads are paused.
+- **Prefer logpoints on shared environments:** Use logpoints (`add-breakpoint` with `logMessage`) instead of normal breakpoints on shared environments. Logpoints log expressions and state without halting execution or interrupting live traffic.
+- **Resume execution before leaving:** If your debugging workflow stopped the process, always resume it (`continue`) before leaving.
+- **Detach vs. terminate with `stop-debug`:** Calling `stop-debug` on an attach session detaches the debugger and leaves the target process running; detach attach sessions with `stop-debug` when done. In contrast, calling `stop-debug` on a launch session terminates the program.
 
 ---
 

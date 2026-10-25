@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- **Zsh-Safe CLI Invocation:** Replaced the `$DAP_CLI` variable pattern in the AI agent skill and documentation with a portable `dap()` shell function that works identically across Bash and Zsh, handles Zsh's strict globbing rules, automatically selects the newest installed extension version, and fails with a clear message and exit code 127 if no installation is found. Added an equivalent PowerShell function and subshell execution guidance.
+- **Live Services & Pausing Warnings:** Added documentation and tool description warnings about the side effects of pausing live or shared services (requests stall until continued). Recommended logpoints on shared environments, detaching with `stop-debug` when done, and cleaning up stopped processes before disconnecting.
+- **Pause Tool Description:** Updated the `pause` execution control tool description to explicitly warn that requests stall on live services until continued.
+
 ## 0.2.0
 
 - **Workspace Configuration Relocation:** Workspace configuration and session auth tokens are now stored cleanly in `.vscode/mcp-dap-debugger.json` instead of creating a separate root folder, with backward-compatible auto-discovery fallback.

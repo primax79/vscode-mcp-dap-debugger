@@ -12,6 +12,7 @@ This guide explains how AI coding assistants (**Claude Code, Kilo Code, Gemini C
 4. [Level 2 (Intermediate): Async Streams & Exception Trapping](#level-2-intermediate-async-streams--exception-trapping)
 5. [Level 3 (Advanced): Multi-Threading & Live Expression Evaluation](#level-3-advanced-multi-threading--live-expression-evaluation)
 6. [Prompt Templates & Best Practices](#prompt-templates--best-practices)
+7. [Calling the CLI from a Shell](#calling-the-cli-from-a-shell)
 
 ---
 
@@ -25,6 +26,8 @@ With **VSCode MCP DAP Debugger**, the assistant drives VS Code's Debug Adapter P
 3. **Execution Control:** Starts the debug session and controls execution flow (`step-over`, `step-into`, `continue`).
 4. **State Inspection:** Reads call stack frames, variable scopes, and evaluates expressions against the paused thread.
 5. **Remediation:** Modifies source code to fix the root cause and restarts the session to verify the fix.
+
+These operations can be executed by an AI assistant via MCP tools, or driven directly from your terminal using the CLI (`dap call <toolName>`) — see [Calling the CLI from a shell](#calling-the-cli-from-a-shell).
 
 ---
 
@@ -141,3 +144,54 @@ A main process distributes computation tasks across Node.js `worker_threads` (`w
 ### 4. Expression Evaluation
 ```text
 "Pause execution inside [file_path] at line [line_number], then evaluate the expression `[expression]` against the paused scope to verify runtime data format."
+```
+
+---
+
+## Calling the CLI from a Shell
+
+To execute debugger commands directly from a terminal or shell script without a persistent MCP client session, define the `dap` function:
+
+```bash
+# macOS / Linux (bash or zsh)
+dap() {
+    [ -n "$ZSH_VERSION" ] && setopt local_options null_glob
+    local f
+    f=$(ls -d ~/.vscode/extensions/alfredooliviero.vscode-mcp-dap-debugger-*/out/cli.js 2>/dev/null | sort -V | tail -n 1)
+    [ -f "$f" ] || { echo "vscode-mcp-dap-debugger CLI not found under ~/.vscode/extensions" >&2; return 127; }
+    node "$f" "$@"
+}
+```
+
+```powershell
+# Windows (PowerShell)
+function dap {
+    $cli = Get-ChildItem "$env:USERPROFILE\.vscode\extensions\alfredooliviero.vscode-mcp-dap-debugger-*\out\cli.js" -ErrorAction SilentlyContinue |
+        Sort-Object { [version]($_.Directory.Parent.Name -replace '.*-', '') } |
+        Select-Object -Last 1
+    if (-not $cli) {
+        Write-Error "vscode-mcp-dap-debugger CLI not found under ~/.vscode/extensions"
+        return
+    }
+    node $cli.FullName @args
+}
+```
+
+> **Note for AI agents:** If your shell tool starts a fresh non-interactive shell per call, define the function in the same command:
+> `dap() { [ -n "$ZSH_VERSION" ] && setopt local_options null_glob; local f; f=$(ls -d ~/.vscode/extensions/alfredooliviero.vscode-mcp-dap-debugger-*/out/cli.js 2>/dev/null | sort -V | tail -n 1); [ -f "$f" ] || { echo "vscode-mcp-dap-debugger CLI not found under ~/.vscode/extensions" >&2; return 127; }; node "$f" "$@"; }; dap call ...`
+
+Example CLI commands for a debugging session:
+
+```bash
+# List available configurations and start debugging
+dap call list-debug-configs
+dap call start-debug '{"config": "Launch Program"}'
+
+# Inspect call stack and variables
+dap call get-call-stack
+dap call get-variables-scope
+
+# Step or evaluate expressions
+dap call step-over
+dap call evaluate-expression '{"expression": "subtotal"}'
+```

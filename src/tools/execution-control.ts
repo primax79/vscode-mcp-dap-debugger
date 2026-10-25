@@ -25,12 +25,20 @@ async function resolveThreadId(session: vscode.DebugSession, threadId?: number):
  * ever affect whichever session happens to have UI focus, which makes
  * controlling more than one concurrent debug session impossible.
  */
-function executionTool(name: keyof typeof inputSchemas, title: string, dapCommand: string, verb: string) {
+function executionTool(
+    name: keyof typeof inputSchemas,
+    title: string,
+    dapCommand: string,
+    verb: string,
+    descriptionSuffix?: string
+) {
+    const baseDescription = `${title} in a specific debug session/thread`
+    const description = descriptionSuffix ? `${baseDescription}. ${descriptionSuffix}` : baseDescription
     return {
         name,
         config: {
             title,
-            description: `${title} in a specific debug session/thread`,
+            description,
             inputSchema: inputSchemas[name],
         },
         handler: async (args: { sessionId?: string; threadId?: number }) => withErrorHandling(async () => {
@@ -48,7 +56,13 @@ export const continueTool = executionTool('continue', 'Continue Execution', 'con
 export const stepOverTool = executionTool('step-over', 'Step Over', 'next', 'Stepped over')
 export const stepIntoTool = executionTool('step-into', 'Step Into', 'stepIn', 'Stepped into')
 export const stepOutTool = executionTool('step-out', 'Step Out', 'stepOut', 'Stepped out')
-export const pauseTool = executionTool('pause', 'Pause Execution', 'pause', 'Execution paused')
+export const pauseTool = executionTool(
+    'pause',
+    'Pause Execution',
+    'pause',
+    'Execution paused',
+    "Stops the target's threads: on a live service, requests stall until continue."
+)
 
 export const stopDebugTool = {
     name: 'stop-debug',
