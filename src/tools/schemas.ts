@@ -105,6 +105,73 @@ export const inputSchemas = {
     },
     'get-thread-list': { sessionId },
 
+    'dump-threads': {
+        sessionId,
+        mode: z
+            .enum(['auto', 'python', 'dap'])
+            .optional()
+            .describe(
+                'Snapshot mode: "python" runs an in-process snippet via evaluate without frameId (no DAP pause; auto for debugpy/python), "dap" calls DAP threads + stackTrace per thread (auto otherwise)'
+            ),
+        maxThreads: z
+            .number()
+            .int()
+            .min(1)
+            .optional()
+            .describe('Maximum number of threads to include (default 100)'),
+        maxFrames: z
+            .number()
+            .int()
+            .min(1)
+            .optional()
+            .describe('Maximum number of stack frames per thread (default 50)'),
+        maxChars: z
+            .number()
+            .int()
+            .min(1000)
+            .max(29000)
+            .optional()
+            .describe('Structural output character budget (default 25000, max 29000)'),
+        includeDebuggerThreads: z
+            .boolean()
+            .optional()
+            .describe('Include internal pydevd/debugpy threads in python mode (default false)'),
+        timeoutMs: z
+            .number()
+            .int()
+            .min(100)
+            .optional()
+            .describe('Timeout in milliseconds when waiting for the runtime snippet output (default 10000)'),
+    },
+    'dump-asyncio-tasks': {
+        sessionId,
+        maxTasks: z
+            .number()
+            .int()
+            .min(1)
+            .optional()
+            .describe('Maximum number of asyncio tasks to include (default 200)'),
+        maxFrames: z
+            .number()
+            .int()
+            .min(1)
+            .optional()
+            .describe('Maximum await-chain depth per task (default 20)'),
+        maxChars: z
+            .number()
+            .int()
+            .min(1000)
+            .max(29000)
+            .optional()
+            .describe('Structural output character budget (default 25000, max 29000)'),
+        timeoutMs: z
+            .number()
+            .int()
+            .min(100)
+            .optional()
+            .describe('Timeout in milliseconds when waiting for the runtime snippet output (default 10000)'),
+    },
+
     'get-dap-log': { sessionId, limit: z.number().int().optional().describe('Max number of most recent messages to return') },
     'get-debug-console': {
         sessionId,

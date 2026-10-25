@@ -177,6 +177,7 @@ class SessionStore {
     private readonly sessions = new Map<string, SessionRecord>()
     private readonly policies = new Map<string, BreakpointPolicyState>()
     private readonly sessionPolicyMap = new Map<string, BreakpointPolicyState>()
+    private readonly consoleSubscribers = new Map<string, Set<(entry: ConsoleOutputEntry) => void>>()
     private activeSessionId: string | undefined
 
     registerSession(session: vscode.DebugSession): void {
@@ -875,6 +876,33 @@ class SessionStore {
 
     appendConsoleOutput(sessionId: string, entry: ConsoleOutputEntry): void {
         this.sessions.get(sessionId)?.consoleOutput.push(entry)
+        const listeners = this.consoleSubscribers.get(sessionId)
+        if (listeners) {
+            for (const cb of [...listeners]) {
+                try {
+                    cb(entry)
+                } catch {
+                    // Ignore subscriber errors so console tracking is never disrupted.
+                }
+            }
+        }
+    }
+
+    subscribeConsoleOutput(sessionId: string, cb: (entry: ConsoleOutputEntry) => void): () => void {
+        let listeners = this.consoleSubscribers.get(sessionId)
+        if (!listeners) {
+            listeners = new Set()
+            this.consoleSubscribers.set(sessionId, listeners)
+        }
+        listeners.add(cb)
+        return () => {
+            const set = this.consoleSubscribers.get(sessionId)
+            if (!set) return
+            set.delete(cb)
+            if (set.size === 0) {
+                this.consoleSubscribers.delete(sessionId)
+            }
+        }
     }
 
     appendException(sessionId: string, entry: ExceptionEntry): void {
@@ -909,4 +937,11 @@ export function getExecutionState(sessionId: string): ExecutionStateSnapshot | u
 
 export function getMostRecentlyStoppedThread(sessionId: string): ThreadExecutionState | undefined {
     return sessionStore.getMostRecentlyStoppedThread(sessionId)
+}
+
+export function subscribeConsoleOutput(
+    sessionId: string,
+    cb: (entry: ConsoleOutputEntry) => void
+): () => void {
+    return sessionStore.subscribeConsoleOutput(sessionId, cb)
 }

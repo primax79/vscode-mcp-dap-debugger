@@ -18,6 +18,7 @@ import {
 } from './sessions'
 import { getDapLogTool, getDebugConsoleTool, getExceptionInfoTool } from './dap-log'
 import { getWorkspaceInfoTool, listVSCodeInstancesTool, selectVSCodeInstanceTool } from './workspace'
+import { dumpThreadsTool, dumpAsyncioTasksTool } from './runtime-dump'
 
 export const allTools = [
     addBreakpointTool,
@@ -46,6 +47,8 @@ export const allTools = [
     getThreadListTool,
     evaluateExpressionTool,
     inspectVariableTool,
+    dumpThreadsTool,
+    dumpAsyncioTasksTool,
 
     getDapLogTool,
     getDebugConsoleTool,
